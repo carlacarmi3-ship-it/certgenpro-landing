@@ -6,19 +6,19 @@ const { generateLicenseNode } = require('./license-helper');
 
 // --- ENVIRONMENT VARIABLES ---
 const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
-const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_URL        = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
-const BREVO_API_KEY = process.env.BREVO_API_KEY;
-const FONNTE_TOKEN = process.env.FONNTE_TOKEN;
-const APP_DOWNLOAD_LINK = process.env.APP_DOWNLOAD_LINK || "https://link-download-app-anda.com";
-const SUPPORT_WA = process.env.SUPPORT_WA || "08123456789";
-const LICENSE_SECRET = process.env.LICENSE_SECRET;
-const APP_ID = "CERTGEN_V1";
+const BREVO_API_KEY       = process.env.BREVO_API_KEY;
+const FONNTE_TOKEN        = process.env.FONNTE_TOKEN;
+const APP_DOWNLOAD_LINK   = process.env.APP_DOWNLOAD_LINK || "https://link-download-app-anda.com";
+const SUPPORT_WA          = process.env.SUPPORT_WA || "08123456789";
+const LICENSE_SECRET      = process.env.LICENSE_SECRET;
+const APP_ID              = "CERTGEN_V1";
 
 // Inisialisasi Supabase
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-// ✅ FIX BUG #5: Mapping nama paket dari frontend → duration tag untuk license-helper
+// Mapping nama paket dari frontend → duration tag untuk license-helper
 const PAKET_TO_DURATION = {
   'paket harian':   '1D',
   'paket bulanan':  '30D',
@@ -26,7 +26,6 @@ const PAKET_TO_DURATION = {
   'paket lifetime': 'LIFETIME'
 };
 
-// ✅ FIX BUG #2: Ganti "export default" → "module.exports ="
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
@@ -45,7 +44,7 @@ module.exports = async function handler(req, res) {
     }
 
     // --- LANGKAH 2: Cek Status Transaksi ---
-    const status = payload.transaction_status;
+    const status  = payload.transaction_status;
     const orderId = payload.order_id;
 
     if (status !== 'settlement' && status !== 'capture') {
@@ -68,55 +67,69 @@ module.exports = async function handler(req, res) {
     }
 
     // --- LANGKAH 4: Ekstrak Data Pembeli ---
-    // ✅ FIX BUG #4: Baca custom_field sesuai urutan yang dikirim create-payment.js
     // custom_field1 = name, custom_field2 = whatsapp, custom_field3 = paket
     const customerName  = payload.custom_field1 || "Pelanggan";
     const customerWA    = payload.custom_field2 || "";
     const paketRaw      = payload.custom_field3 || "paket bulanan";
-    const customerEmail = payload.customer_details?.email || `user-${Date.now()}@temp.com`;
 
-    // ✅ FIX BUG #5: Konversi nama paket → duration tag
+    // ✅ FIX: Midtrans mengirim email sebagai payload.email (flat), bukan nested customer_details
+    const customerEmail = payload.email || `user-${Date.now()}@temp.com`;
+
+    // Konversi nama paket → duration tag
     const durationTag = PAKET_TO_DURATION[paketRaw.toLowerCase().trim()] || '30D';
     console.log(`📦 Paket: "${paketRaw}" → Duration Tag: "${durationTag}"`);
 
     // --- LANGKAH 5: Generate Lisensi ---
     console.log(`⚙️ Generating license untuk: ${customerEmail}, Paket: ${durationTag}`);
     const tokenDays = 3;
-
     const licenseData = generateLicenseNode(APP_ID, LICENSE_SECRET, durationTag, tokenDays);
-    const licenseKey = licenseData.license_code;
+    const licenseKey  = licenseData.license_code;
 
     // --- LANGKAH 6: Simpan ke Database ---
+
     // 6A. Upsert Customer
-    await supabase.from('customers').upsert({
-      email: customerEmail,
-      name: customerName,
+    const { error: customerError } = await supabase.from('customers').upsert({
+      email:    customerEmail,
+      name:     customerName,
       whatsapp: customerWA
     }, { onConflict: 'email' });
 
+    if (customerError) {
+      console.error('❌ Gagal upsert customer:', JSON.stringify(customerError, null, 2));
+    }
+
     // 6B. Update Status Transaksi
-    await supabase.from('transactions')
+    const { error: txError } = await supabase.from('transactions')
       .update({
-        status: 'paid',
+        status:         'paid',
         customer_email: customerEmail,
-        customer_name: customerName,
-        customer_wa: customerWA,
-        payment_type: payload.payment_type,
-        paid_at: new Date().toISOString(),
-        raw_payload: payload
+        customer_name:  customerName,
+        customer_wa:    customerWA,
+        payment_type:   payload.payment_type,
+        paid_at:        new Date().toISOString(),
+        raw_payload:    payload
       })
       .eq('order_id', orderId);
 
+    if (txError) {
+      console.error('❌ Gagal update transaksi:', JSON.stringify(txError, null, 2));
+    }
+
     // 6C. Simpan Data Lisensi
-    await supabase.from('licenses').insert({
-      order_id: orderId,
-      license_key: licenseKey,
+    // ✅ FIX: Tambahkan error handling agar tidak silent fail
+    const { error: licenseError } = await supabase.from('licenses').insert({
+      order_id:     orderId,
+      license_key:  licenseKey,
       package_name: paketRaw,
-      app_id: APP_ID,
-      expired_at: new Date(licenseData.license_expires * 1000).toISOString(),
-      email_sent: false,
-      wa_sent: false
+      app_id:       APP_ID,
+      expired_at:   new Date(licenseData.license_expires * 1000).toISOString(),
+      email_sent:   false,
+      wa_sent:      false
     });
+
+    if (licenseError) {
+      console.error('❌ Gagal simpan lisensi:', JSON.stringify(licenseError, null, 2));
+    }
 
     // --- LANGKAH 7: Kirim Email via Brevo ---
     let emailSent = false;

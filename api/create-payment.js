@@ -22,7 +22,6 @@ const PRICELIST = {
   'paket lifetime': 599000
 };
 
-// ✅ FIX BUG #2: Ganti "export default" → "module.exports ="
 module.exports = async function handler(req, res) {
   // --- KONFIGURASI CORS ---
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -58,7 +57,6 @@ module.exports = async function handler(req, res) {
     const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
     const orderId = `CGP-${timestamp}-${randomStr}`;
 
-    // ✅ FIX BUG #4: Mapping custom_field yang benar & konsisten dengan webhook
     // custom_field1 = name, custom_field2 = whatsapp, custom_field3 = paket
     const parameter = {
       transaction_details: {
@@ -76,9 +74,9 @@ module.exports = async function handler(req, res) {
         quantity: 1,
         name: `Lisensi CertGen Pro - ${paket}`
       }],
-      custom_field1: name,      // ✅ Nama customer
-      custom_field2: whatsapp,  // ✅ Nomor WhatsApp
-      custom_field3: paket,     // ✅ Nama paket (untuk dikonversi ke duration tag di webhook)
+      custom_field1: name,      // Nama customer
+      custom_field2: whatsapp,  // Nomor WhatsApp
+      custom_field3: paket,     // Nama paket
       callbacks: {
         finish: `https://${req.headers.host}/thank-you.html?order=${orderId}`,
         error: `https://${req.headers.host}/renew.html?error=1`,
@@ -91,21 +89,22 @@ module.exports = async function handler(req, res) {
     const snapToken = transaction.token;
 
     // --- 5. SIMPAN KE DATABASE SUPABASE ---
+    // ✅ FIX: Nama kolom disesuaikan dengan schema tabel transactions
     const { error: dbError } = await supabase
       .from('transactions')
       .insert([{
-        order_id: orderId,
-        name: name,
-        email: email,
-        whatsapp: whatsapp,
-        paket: paket,
-        amount: expectedPrice,
-        status: 'pending',
-        created_at: new Date().toISOString()
+        order_id:       orderId,
+        customer_name:  name,           // ✅ fix: bukan 'name'
+        customer_email: email,          // ✅ fix: bukan 'email'
+        customer_wa:    whatsapp,       // ✅ fix: bukan 'whatsapp'
+        paket:          paket,
+        amount:         expectedPrice,
+        status:         'pending',
+        created_at:     new Date().toISOString()
       }]);
 
     if (dbError) {
-      console.error('Supabase Insert Error:', dbError);
+      console.error('Supabase Insert Error:', JSON.stringify(dbError, null, 2));
       throw new Error('Gagal menyimpan data ke database.');
     }
 
