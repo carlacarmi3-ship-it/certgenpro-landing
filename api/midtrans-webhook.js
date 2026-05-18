@@ -1,11 +1,10 @@
-// File: api/midtrans-webhook.js
-
+// api/midtrans-webhook.js
 const crypto = require('crypto');
 const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 const { generateLicenseNode } = require('./license-helper');
 
-// --- AMBIL ENVIRONMENT VARIABLES ---
+// --- ENVIRONMENT VARIABLES ---
 const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -13,14 +12,22 @@ const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const FONNTE_TOKEN = process.env.FONNTE_TOKEN;
 const APP_DOWNLOAD_LINK = process.env.APP_DOWNLOAD_LINK || "https://link-download-app-anda.com";
 const SUPPORT_WA = process.env.SUPPORT_WA || "08123456789";
-const LICENSE_SECRET = process.env.LICENSE_SECRET; // Harus SAMA PERSIS dengan yg di app Python Anda
-const APP_ID = "CERTGEN_V1"; // Sesuaikan dengan APP_ID Anda
+const LICENSE_SECRET = process.env.LICENSE_SECRET;
+const APP_ID = "CERTGEN_V1";
 
 // Inisialisasi Supabase
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-export default async function handler(req, res) {
-  // Wajib POST request
+// ✅ FIX BUG #5: Mapping nama paket dari frontend → duration tag untuk license-helper
+const PAKET_TO_DURATION = {
+  'paket harian':   '1D',
+  'paket bulanan':  '30D',
+  'paket tahunan':  '365D',
+  'paket lifetime': 'LIFETIME'
+};
+
+// ✅ FIX BUG #2: Ganti "export default" → "module.exports ="
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
@@ -28,7 +35,7 @@ export default async function handler(req, res) {
   try {
     const payload = req.body;
 
-    // --- LANGKAH 1: Verifikasi Keamanan Signature Midtrans ---
+    // --- LANGKAH 1: Verifikasi Signature Midtrans ---
     const rawString = `${payload.order_id}${payload.status_code}${payload.gross_amount}${MIDTRANS_SERVER_KEY}`;
     const hash = crypto.createHash('sha512').update(rawString).digest('hex');
 
@@ -40,16 +47,15 @@ export default async function handler(req, res) {
     // --- LANGKAH 2: Cek Status Transaksi ---
     const status = payload.transaction_status;
     const orderId = payload.order_id;
-    
+
     if (status !== 'settlement' && status !== 'capture') {
-      // Jika status pending/batal/kadaluarsa, update DB lalu kembalikan 200 (Stop proses)
       await supabase.from('transactions')
         .update({ status: status })
         .eq('order_id', orderId);
       return res.status(200).json({ message: 'Status updated' });
     }
 
-    // --- LANGKAH 3: Cek Duplikat di Database ---
+    // --- LANGKAH 3: Cek Duplikat ---
     const { data: existingTx } = await supabase
       .from('transactions')
       .select('status')
@@ -62,46 +68,54 @@ export default async function handler(req, res) {
     }
 
     // --- LANGKAH 4: Ekstrak Data Pembeli ---
-    // Pastikan saat Frontend Anda melakukan pembayaran (create-payment), 
-    // Anda mengisi item_details atau custom_fields di Snap payload
-    const customerName = payload.custom_field1 || "Pelanggan"; // Asumsi custom_field1 = Nama
-    const customerWA = payload.custom_field2 || ""; // Asumsi custom_field2 = No WA
-    const durationTag = payload.custom_field3 || "30D"; // Asumsi custom_field3 = Paket (1D/30D/365D/LIFETIME)
-    
-    // Email biasanya ada di object customer_details
-    const customerEmail = payload.customer_details?.email || `user-${Date.now()}@temp.com`; 
+    // ✅ FIX BUG #4: Baca custom_field sesuai urutan yang dikirim create-payment.js
+    // custom_field1 = name, custom_field2 = whatsapp, custom_field3 = paket
+    const customerName  = payload.custom_field1 || "Pelanggan";
+    const customerWA    = payload.custom_field2 || "";
+    const paketRaw      = payload.custom_field3 || "paket bulanan";
+    const customerEmail = payload.customer_details?.email || `user-${Date.now()}@temp.com`;
+
+    // ✅ FIX BUG #5: Konversi nama paket → duration tag
+    const durationTag = PAKET_TO_DURATION[paketRaw.toLowerCase().trim()] || '30D';
+    console.log(`📦 Paket: "${paketRaw}" → Duration Tag: "${durationTag}"`);
 
     // --- LANGKAH 5: Generate Lisensi ---
     console.log(`⚙️ Generating license untuk: ${customerEmail}, Paket: ${durationTag}`);
-    const tokenDays = 3; // User diberi waktu 3 hari untuk aktivasi kodenya
-    
+    const tokenDays = 3;
+
     const licenseData = generateLicenseNode(APP_ID, LICENSE_SECRET, durationTag, tokenDays);
     const licenseKey = licenseData.license_code;
 
-    // --- LANGKAH 6: Simpan ke Database (Supabase) ---
+    // --- LANGKAH 6: Simpan ke Database ---
     // 6A. Upsert Customer
     await supabase.from('customers').upsert({
       email: customerEmail,
       name: customerName,
       whatsapp: customerWA
-    });
+    }, { onConflict: 'email' });
 
-    // 6B. Update Status Transaction
-    await supabase.from('transactions').upsert({
-      order_id: orderId,
-      status: 'paid',
-      gross_amount: parseFloat(payload.gross_amount),
-      payment_type: payload.payment_type,
-      customer_email: customerEmail
-    });
+    // 6B. Update Status Transaksi
+    await supabase.from('transactions')
+      .update({
+        status: 'paid',
+        customer_email: customerEmail,
+        customer_name: customerName,
+        customer_wa: customerWA,
+        payment_type: payload.payment_type,
+        paid_at: new Date().toISOString(),
+        raw_payload: payload
+      })
+      .eq('order_id', orderId);
 
     // 6C. Simpan Data Lisensi
     await supabase.from('licenses').insert({
       order_id: orderId,
       license_key: licenseKey,
-      package_name: durationTag,
+      package_name: paketRaw,
       app_id: APP_ID,
-      expired_at: new Date(licenseData.license_expires * 1000).toISOString()
+      expired_at: new Date(licenseData.license_expires * 1000).toISOString(),
+      email_sent: false,
+      wa_sent: false
     });
 
     // --- LANGKAH 7: Kirim Email via Brevo ---
@@ -119,7 +133,7 @@ export default async function handler(req, res) {
             <p style="margin: 0; font-size: 12px; color: #d32f2f;">*Segera aktifkan dalam ${tokenDays} hari agar kode tidak hangus!</p>
           </div>
 
-          <p><b>Paket:</b> ${durationTag}</p>
+          <p><b>Paket:</b> ${paketRaw}</p>
           
           <h3>Langkah Aktivasi:</h3>
           <ol>
@@ -136,7 +150,7 @@ export default async function handler(req, res) {
       `;
 
       await axios.post('https://api.brevo.com/v3/smtp/email', {
-        sender: { name: "CertGen Pro", email: "noreply@domainanda.com" }, // Ganti email ini
+        sender: { name: "CertGen Pro", email: "noreply@domainanda.com" },
         to: [{ email: customerEmail, name: customerName }],
         subject: "🎉 License Key CertGen Pro Anda Sudah Siap!",
         htmlContent: emailHtml
@@ -156,7 +170,7 @@ export default async function handler(req, res) {
     let waSent = false;
     if (customerWA) {
       try {
-        const waMessage = `Halo ${customerName}! 🎉\n\nLicense Key CertGen Pro Anda:\n*${licenseKey}*\n\nPaket: ${durationTag}\n_PENTING: Segera aktifkan kode ini dalam ${tokenDays} hari di aplikasi._\n\nCara aktivasi:\n1. Buka CertGen Pro\n2. Klik Aktivasi Lisensi\n3. Paste key di atas → Aktif!\n\nLink Download App:\n${APP_DOWNLOAD_LINK}\n\nButuh bantuan? Balas pesan ini. Terima kasih! 🙏`;
+        const waMessage = `Halo ${customerName}! 🎉\n\nLicense Key CertGen Pro Anda:\n*${licenseKey}*\n\nPaket: ${paketRaw}\n_PENTING: Segera aktifkan kode ini dalam ${tokenDays} hari di aplikasi._\n\nCara aktivasi:\n1. Buka CertGen Pro\n2. Klik Aktivasi Lisensi\n3. Paste key di atas → Aktif!\n\nLink Download App:\n${APP_DOWNLOAD_LINK}\n\nButuh bantuan? Balas pesan ini. Terima kasih! 🙏`;
 
         await axios.post('https://api.fonnte.com/send', {
           target: customerWA,
@@ -177,13 +191,11 @@ export default async function handler(req, res) {
       .update({ email_sent: emailSent, wa_sent: waSent })
       .eq('order_id', orderId);
 
-    // --- LANGKAH 10: Selesai ---
-    // Harus selalu balas 200 OK ke Midtrans
+    console.log(`✅ Webhook selesai diproses untuk Order: ${orderId}`);
     return res.status(200).json({ message: 'Success process webhook' });
 
   } catch (error) {
     console.error("🔥 ERROR SISTEM:", error);
-    // Kita tetap kirim 200 ke Midtrans agar webhook tidak terus-menerus diulang jika error dari sisi code kita
-    return res.status(200).json({ message: 'Error processing webhook, logged.' }); 
+    return res.status(200).json({ message: 'Error processing webhook, logged.' });
   }
-}
+};
