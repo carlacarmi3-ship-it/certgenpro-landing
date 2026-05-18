@@ -57,7 +57,8 @@ module.exports = async function handler(req, res) {
     const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
     const orderId = `CGP-${timestamp}-${randomStr}`;
 
-    // custom_field1 = name, custom_field2 = whatsapp, custom_field3 = paket
+    // ✅ FIX: custom_field1 = name, custom_field2 = email, custom_field3 = JSON{wa, paket}
+    // Midtrans tidak selalu mengirim email di payload webhook, jadi kita simpan sendiri di custom_field
     const parameter = {
       transaction_details: {
         order_id: orderId,
@@ -74,9 +75,9 @@ module.exports = async function handler(req, res) {
         quantity: 1,
         name: `Lisensi CertGen Pro - ${paket}`
       }],
-      custom_field1: name,      // Nama customer
-      custom_field2: whatsapp,  // Nomor WhatsApp
-      custom_field3: paket,     // Nama paket
+      custom_field1: name,                                          // Nama customer
+      custom_field2: email,                                         // ✅ Email customer (pindah dari whatsapp)
+      custom_field3: JSON.stringify({ wa: whatsapp, paket: paket }),// ✅ WA & paket digabung JSON
       callbacks: {
         finish: `https://${req.headers.host}/thank-you.html?order=${orderId}`,
         error: `https://${req.headers.host}/renew.html?error=1`,
@@ -89,14 +90,13 @@ module.exports = async function handler(req, res) {
     const snapToken = transaction.token;
 
     // --- 5. SIMPAN KE DATABASE SUPABASE ---
-    // ✅ FIX: Nama kolom disesuaikan dengan schema tabel transactions
     const { error: dbError } = await supabase
       .from('transactions')
       .insert([{
         order_id:       orderId,
-        customer_name:  name,           // ✅ fix: bukan 'name'
-        customer_email: email,          // ✅ fix: bukan 'email'
-        customer_wa:    whatsapp,       // ✅ fix: bukan 'whatsapp'
+        customer_name:  name,
+        customer_email: email,
+        customer_wa:    whatsapp,
         paket:          paket,
         amount:         expectedPrice,
         status:         'pending',

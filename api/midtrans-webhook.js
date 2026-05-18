@@ -5,15 +5,20 @@ const { createClient } = require('@supabase/supabase-js');
 const { generateLicenseNode } = require('./license-helper');
 
 // --- ENVIRONMENT VARIABLES ---
-const MIDTRANS_SERVER_KEY = process.env.MIDTRANS_SERVER_KEY;
-const SUPABASE_URL        = process.env.SUPABASE_URL;
+const MIDTRANS_SERVER_KEY  = process.env.MIDTRANS_SERVER_KEY;
+const SUPABASE_URL         = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
-const BREVO_API_KEY       = process.env.BREVO_API_KEY;
-const FONNTE_TOKEN        = process.env.FONNTE_TOKEN;
-const APP_DOWNLOAD_LINK   = process.env.APP_DOWNLOAD_LINK || "https://link-download-app-anda.com";
-const SUPPORT_WA          = process.env.SUPPORT_WA || "08123456789";
-const LICENSE_SECRET      = process.env.LICENSE_SECRET;
-const APP_ID              = "CERTGEN_V1";
+const BREVO_API_KEY        = process.env.BREVO_API_KEY;
+const FONNTE_TOKEN         = process.env.FONNTE_TOKEN;
+const APP_DOWNLOAD_LINK    = process.env.APP_DOWNLOAD_LINK || "https://link-download-app-anda.com";
+const SUPPORT_WA           = process.env.SUPPORT_WA || "08123456789";
+const LICENSE_SECRET       = process.env.LICENSE_SECRET;
+const APP_ID               = "CERTGEN_V1";
+
+// ✅ FIX: Ganti dengan email pengirim yang sudah diverifikasi di Brevo
+// Pastikan email ini sudah ada di app.brevo.com → Settings → Senders & IPs
+const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || "carlacarmi3@gmail.com";
+const BREVO_SENDER_NAME  = "CertGen Pro";
 
 // Inisialisasi Supabase
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -67,17 +72,30 @@ module.exports = async function handler(req, res) {
     }
 
     // --- LANGKAH 4: Ekstrak Data Pembeli ---
-    // custom_field1 = name, custom_field2 = whatsapp, custom_field3 = paket
+    // ✅ FIX: custom_field1 = name, custom_field2 = email, custom_field3 = JSON{wa, paket}
     const customerName  = payload.custom_field1 || "Pelanggan";
-    const customerWA    = payload.custom_field2 || "";
-    const paketRaw      = payload.custom_field3 || "paket bulanan";
+    const customerEmail = payload.custom_field2 || "";
 
-    // ✅ FIX: Midtrans mengirim email sebagai payload.email (flat), bukan nested customer_details
-    const customerEmail = payload.email || `user-${Date.now()}@temp.com`;
+    // Parse custom_field3 yang berisi JSON gabungan wa + paket
+    let customerWA = "";
+    let paketRaw   = "paket bulanan";
+    try {
+      const field3 = JSON.parse(payload.custom_field3 || '{}');
+      customerWA   = field3.wa    || "";
+      paketRaw     = field3.paket || "paket bulanan";
+    } catch (e) {
+      console.error("⚠️ Gagal parse custom_field3:", payload.custom_field3);
+    }
+
+    // Validasi email tidak kosong
+    if (!customerEmail) {
+      console.error(`❌ Email customer kosong untuk order ${orderId}. Cek custom_field2.`);
+    }
 
     // Konversi nama paket → duration tag
     const durationTag = PAKET_TO_DURATION[paketRaw.toLowerCase().trim()] || '30D';
     console.log(`📦 Paket: "${paketRaw}" → Duration Tag: "${durationTag}"`);
+    console.log(`👤 Customer: ${customerName} | Email: ${customerEmail} | WA: ${customerWA}`);
 
     // --- LANGKAH 5: Generate Lisensi ---
     console.log(`⚙️ Generating license untuk: ${customerEmail}, Paket: ${durationTag}`);
@@ -116,7 +134,6 @@ module.exports = async function handler(req, res) {
     }
 
     // 6C. Simpan Data Lisensi
-    // ✅ FIX: Tambahkan error handling agar tidak silent fail
     const { error: licenseError } = await supabase.from('licenses').insert({
       order_id:     orderId,
       license_key:  licenseKey,
@@ -133,59 +150,67 @@ module.exports = async function handler(req, res) {
 
     // --- LANGKAH 7: Kirim Email via Brevo ---
     let emailSent = false;
-    try {
-      const emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-          <h2>🎉 License Key CertGen Pro Anda Sudah Siap!</h2>
-          <p>Halo <b>${customerName}</b>,</p>
-          <p>Terima kasih telah melakukan pembelian. Berikut adalah detail lisensi Anda:</p>
-          
-          <div style="background-color: #f4f4f4; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
-            <p style="margin: 0; font-size: 14px; color: #555;">KODE LISENSI ANDA:</p>
-            <h3 style="margin: 10px 0; font-family: monospace; font-size: 20px; color: #d32f2f;">${licenseKey}</h3>
-            <p style="margin: 0; font-size: 12px; color: #d32f2f;">*Segera aktifkan dalam ${tokenDays} hari agar kode tidak hangus!</p>
+    if (!customerEmail) {
+      console.error("⚠️ Skip kirim email: email customer kosong.");
+    } else {
+      try {
+        const emailHtml = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+            <h2>🎉 License Key CertGen Pro Anda Sudah Siap!</h2>
+            <p>Halo <b>${customerName}</b>,</p>
+            <p>Terima kasih telah melakukan pembelian. Berikut adalah detail lisensi Anda:</p>
+            
+            <div style="background-color: #f4f4f4; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
+              <p style="margin: 0; font-size: 14px; color: #555;">KODE LISENSI ANDA:</p>
+              <h3 style="margin: 10px 0; font-family: monospace; font-size: 20px; color: #d32f2f;">${licenseKey}</h3>
+              <p style="margin: 0; font-size: 12px; color: #d32f2f;">*Segera aktifkan dalam ${tokenDays} hari agar kode tidak hangus!</p>
+            </div>
+
+            <p><b>Paket:</b> ${paketRaw}</p>
+            
+            <h3>Langkah Aktivasi:</h3>
+            <ol>
+              <li>Download aplikasi: <a href="${APP_DOWNLOAD_LINK}">Klik di sini</a></li>
+              <li>Buka aplikasi CertGen Pro</li>
+              <li>Klik menu <b>Aktivasi Lisensi</b></li>
+              <li>Paste kode lisensi di atas, lalu klik <b>Aktifkan</b></li>
+            </ol>
+
+            <p>Butuh bantuan? Silakan balas email ini atau hubungi WA kami: ${SUPPORT_WA}</p>
+            <hr>
+            <p style="font-size: 12px; color: #888; text-align: center;">© ImagineStudio</p>
           </div>
+        `;
 
-          <p><b>Paket:</b> ${paketRaw}</p>
-          
-          <h3>Langkah Aktivasi:</h3>
-          <ol>
-            <li>Download aplikasi: <a href="${APP_DOWNLOAD_LINK}">Klik di sini</a></li>
-            <li>Buka aplikasi CertGen Pro</li>
-            <li>Klik menu <b>Aktivasi Lisensi</b></li>
-            <li>Paste kode lisensi di atas, lalu klik <b>Aktifkan</b></li>
-          </ol>
-
-          <p>Butuh bantuan? Silakan balas email ini atau hubungi WA kami: ${SUPPORT_WA}</p>
-          <hr>
-          <p style="font-size: 12px; color: #888; text-align: center;">© ImagineStudio</p>
-        </div>
-      `;
-
-      await axios.post('https://api.brevo.com/v3/smtp/email', {
-        sender: { name: "CertGen Pro", email: "noreply@domainanda.com" },
-        to: [{ email: customerEmail, name: customerName }],
-        subject: "🎉 License Key CertGen Pro Anda Sudah Siap!",
-        htmlContent: emailHtml
-      }, {
-        headers: {
-          'api-key': BREVO_API_KEY,
-          'Content-Type': 'application/json'
-        }
-      });
-      emailSent = true;
-      console.log(`📧 Email terkirim ke ${customerEmail}`);
-    } catch (err) {
-      console.error(`❌ Gagal kirim email:`, err.response?.data || err.message);
+        const brevoResponse = await axios.post('https://api.brevo.com/v3/smtp/email', {
+          // ✅ FIX: Gunakan email yang sudah diverifikasi di Brevo
+          sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
+          to: [{ email: customerEmail, name: customerName }],
+          subject: "🎉 License Key CertGen Pro Anda Sudah Siap!",
+          htmlContent: emailHtml
+        }, {
+          headers: {
+            'api-key': BREVO_API_KEY,
+            'Content-Type': 'application/json'
+          }
+        });
+        emailSent = true;
+        console.log(`📧 Email terkirim ke ${customerEmail} | Brevo msgId: ${brevoResponse.data?.messageId}`);
+      } catch (err) {
+        console.error(`❌ Gagal kirim email ke ${customerEmail}:`, err.response?.data || err.message);
+      }
     }
 
     // --- LANGKAH 8: Kirim WA via Fonnte ---
+    // ✅ NOTE: Pastikan device Fonnte dalam status CONNECTED di md.fonnte.com/new/device.php
     let waSent = false;
-    if (customerWA) {
+    if (!customerWA) {
+      console.error("⚠️ Skip kirim WA: nomor WA customer kosong.");
+    } else {
       try {
         const waMessage = `Halo ${customerName}! 🎉\n\nLicense Key CertGen Pro Anda:\n*${licenseKey}*\n\nPaket: ${paketRaw}\n_PENTING: Segera aktifkan kode ini dalam ${tokenDays} hari di aplikasi._\n\nCara aktivasi:\n1. Buka CertGen Pro\n2. Klik Aktivasi Lisensi\n3. Paste key di atas → Aktif!\n\nLink Download App:\n${APP_DOWNLOAD_LINK}\n\nButuh bantuan? Balas pesan ini. Terima kasih! 🙏`;
 
-        await axios.post('https://api.fonnte.com/send', {
+        const fonnte = await axios.post('https://api.fonnte.com/send', {
           target: customerWA,
           message: waMessage,
           countryCode: "62"
@@ -193,9 +218,9 @@ module.exports = async function handler(req, res) {
           headers: { 'Authorization': FONNTE_TOKEN }
         });
         waSent = true;
-        console.log(`📱 WA terkirim ke ${customerWA}`);
+        console.log(`📱 WA terkirim ke ${customerWA} | Fonnte response:`, fonnte.data);
       } catch (err) {
-        console.error(`❌ Gagal kirim WA:`, err.response?.data || err.message);
+        console.error(`❌ Gagal kirim WA ke ${customerWA}:`, err.response?.data || err.message);
       }
     }
 
@@ -204,7 +229,7 @@ module.exports = async function handler(req, res) {
       .update({ email_sent: emailSent, wa_sent: waSent })
       .eq('order_id', orderId);
 
-    console.log(`✅ Webhook selesai diproses untuk Order: ${orderId}`);
+    console.log(`✅ Webhook selesai diproses untuk Order: ${orderId} | email_sent: ${emailSent} | wa_sent: ${waSent}`);
     return res.status(200).json({ message: 'Success process webhook' });
 
   } catch (error) {
