@@ -13,10 +13,10 @@ const FONNTE_TOKEN         = process.env.FONNTE_TOKEN;
 const APP_DOWNLOAD_LINK    = process.env.APP_DOWNLOAD_LINK || "https://link-download-app-anda.com";
 const SUPPORT_WA           = process.env.SUPPORT_WA || "08123456789";
 const LICENSE_SECRET       = process.env.LICENSE_SECRET;
-const APP_ID               = "CERTGEN_V1";
 
-// ✅ FIX: Ganti dengan email pengirim yang sudah diverifikasi di Brevo
-// Pastikan email ini sudah ada di app.brevo.com → Settings → Senders & IPs
+// ✅ PERBAIKAN: Ubah APP_ID menjadi "CERTGEN" (samakan dengan di License UI)
+const APP_ID               = "CERTGEN";
+
 const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || "carlacarmi3@gmail.com";
 const BREVO_SENDER_NAME  = "CertGen Pro";
 
@@ -72,7 +72,6 @@ module.exports = async function handler(req, res) {
     }
 
     // --- LANGKAH 4: Ekstrak Data Pembeli ---
-    // ✅ FIX: custom_field1 = name, custom_field2 = email, custom_field3 = JSON{wa, paket}
     const customerName  = payload.custom_field1 || "Pelanggan";
     const customerEmail = payload.custom_field2 || "";
 
@@ -87,7 +86,6 @@ module.exports = async function handler(req, res) {
       console.error("⚠️ Gagal parse custom_field3:", payload.custom_field3);
     }
 
-    // Validasi email tidak kosong
     if (!customerEmail) {
       console.error(`❌ Email customer kosong untuk order ${orderId}. Cek custom_field2.`);
     }
@@ -100,7 +98,9 @@ module.exports = async function handler(req, res) {
     // --- LANGKAH 5: Generate Lisensi ---
     console.log(`⚙️ Generating license untuk: ${customerEmail}, Paket: ${durationTag}`);
     const tokenDays = 3;
-    const licenseData = generateLicenseNode(APP_ID, LICENSE_SECRET, durationTag, tokenDays);
+    
+    // ✅ PERBAIKAN: Memasukkan customerEmail sebagai parameter ke-4
+    const licenseData = generateLicenseNode(APP_ID, LICENSE_SECRET, durationTag, customerEmail, tokenDays);
     const licenseKey  = licenseData.license_code;
 
     // --- LANGKAH 6: Simpan ke Database ---
@@ -183,7 +183,6 @@ module.exports = async function handler(req, res) {
         `;
 
         const brevoResponse = await axios.post('https://api.brevo.com/v3/smtp/email', {
-          // ✅ FIX: Gunakan email yang sudah diverifikasi di Brevo
           sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
           to: [{ email: customerEmail, name: customerName }],
           subject: "🎉 License Key CertGen Pro Anda Sudah Siap!",
@@ -202,7 +201,6 @@ module.exports = async function handler(req, res) {
     }
 
     // --- LANGKAH 8: Kirim WA via Fonnte ---
-    // ✅ NOTE: Pastikan device Fonnte dalam status CONNECTED di md.fonnte.com/new/device.php
     let waSent = false;
     if (!customerWA) {
       console.error("⚠️ Skip kirim WA: nomor WA customer kosong.");

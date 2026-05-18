@@ -16,7 +16,8 @@ function deriveKeys(secretKey, appId) {
   return { encKey, macKey };
 }
 
-function generateLicenseNode(appId, secretKey, durationTag, tokenValidityDays = 1) {
+// ✅ PERBAIKAN: Menambahkan parameter `customerEmail` (default kosong)
+function generateLicenseNode(appId, secretKey, durationTag, customerEmail = "", tokenValidityDays = 1) {
   if (!DURATION_DAYS[durationTag]) {
     throw new Error(`Durasi ${durationTag} tidak valid. Pilihan: 1D, 30D, 365D, LIFETIME`);
   }
@@ -27,10 +28,12 @@ function generateLicenseNode(appId, secretKey, durationTag, tokenValidityDays = 
   const tokenExpiry   = now + (tokenValidityDays * 24 * 60 * 60);
   const licenseExpiry = now + (DURATION_DAYS[durationTag] * 24 * 60 * 60);
 
+  // ✅ PERBAIKAN: Menambahkan key `eml` ke payload agar tidak Error/KeyError di Python
   const payload = {
     v:   1,
     app: appId,
     dur: DURATION_DAYS[durationTag],
+    eml: customerEmail, 
     tak: tokenExpiry,
     lak: licenseExpiry,
     nce: crypto.randomBytes(4).readUInt32BE(0)
