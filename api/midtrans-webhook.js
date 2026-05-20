@@ -17,7 +17,7 @@ const LICENSE_SECRET       = process.env.LICENSE_SECRET;
 // ✅ PERBAIKAN: Ubah APP_ID menjadi "CERTGEN" (samakan dengan di License UI)
 const APP_ID               = "CERTGEN";
 
-const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || "carlacarmi3@gmail.com";
+const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || "email@imaginestudio.online";
 const BREVO_SENDER_NAME  = "CertGen Pro";
 
 // Inisialisasi Supabase
