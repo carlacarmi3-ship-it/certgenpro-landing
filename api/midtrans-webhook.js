@@ -10,7 +10,11 @@ const SUPABASE_URL         = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const BREVO_API_KEY        = process.env.BREVO_API_KEY;
 const FONNTE_TOKEN         = process.env.FONNTE_TOKEN;
-const APP_DOWNLOAD_LINK    = process.env.APP_DOWNLOAD_LINK || "https://link-download-app-anda.com";
+
+// Link Download (Utama dan Mirror)
+const APP_DOWNLOAD_LINK        = process.env.APP_DOWNLOAD_LINK || "https://link-download-app-anda.com";
+const APP_DOWNLOAD_LINK_MIRROR = process.env.APP_DOWNLOAD_LINK_MIRROR || "https://link-mirror-anda.com"; // <-- Tambahan Link Mirror
+
 const SUPPORT_WA           = process.env.SUPPORT_WA || "08123456789";
 const LICENSE_SECRET       = process.env.LICENSE_SECRET;
 const APP_ID               = "CERTGEN";
@@ -51,25 +55,27 @@ module.exports = async function handler(req, res) {
     const customerEmail = payload.custom_field2 || "";
     let customerWA = "";
     let paketRaw   = "paket bulanan";
-    let customerCity = ""; // ✅ Variable kota
+    let customerCity = ""; 
 
     try {
       const field3 = JSON.parse(payload.custom_field3 || '{}');
       customerWA   = field3.wa    || "";
       paketRaw     = field3.paket || "paket bulanan";
-      customerCity = field3.kota  || ""; // ✅ Ekstrak kota
+      customerCity = field3.kota  || ""; 
     } catch (e) {
       console.error("⚠️ Gagal parse custom_field3:", payload.custom_field3);
     }
 
     const durationTag = PAKET_TO_DURATION[paketRaw.toLowerCase().trim()] || '30D';
-    const tokenDays = 3;
+    
+    // ✅ BRIEF 1: Ubah masa tenggang aktivasi menjadi 1 Hari
+    const tokenDays = 1; 
+
     const licenseData = generateLicenseNode(APP_ID, LICENSE_SECRET, durationTag, customerEmail, tokenDays);
     const licenseKey  = licenseData.license_code;
 
     await supabase.from('customers').upsert({ email: customerEmail, name: customerName, whatsapp: customerWA }, { onConflict: 'email' });
 
-    // ✅ Update ke tabel transactions ditambah customer_city
     const { error: txError } = await supabase.from('transactions')
       .update({
         status:         'paid',
@@ -89,7 +95,6 @@ module.exports = async function handler(req, res) {
       email_sent: false, wa_sent: false
     });
 
-    // ✅ Notifikasi error DB ke Admin (Lisensi pembeli tetap dikirim)
     if (txError || licenseError) {
       console.error('❌ Gagal DB:', txError || licenseError);
       try {
@@ -104,7 +109,44 @@ module.exports = async function handler(req, res) {
     let emailSent = false;
     if (customerEmail) {
       try {
-        const emailHtml = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;"><h2>🎉 License Key CertGen Pro Anda Sudah Siap!</h2><p>Halo <b>${customerName}</b>,</p><p>Terima kasih telah melakukan pembelian. Berikut adalah detail lisensi Anda:</p><div style="background-color: #f4f4f4; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;"><p style="margin: 0; font-size: 14px; color: #555;">KODE LISENSI ANDA:</p><h3 style="margin: 10px 0; font-family: monospace; font-size: 20px; color: #d32f2f;">${licenseKey}</h3><p style="margin: 0; font-size: 12px; color: #d32f2f;">*Segera aktifkan dalam ${tokenDays} hari agar kode tidak hangus!</p></div><p><b>Paket:</b> ${paketRaw}</p><h3>Langkah Aktivasi:</h3><ol><li>Download aplikasi: <a href="${APP_DOWNLOAD_LINK}">Klik di sini</a></li><li>Buka aplikasi CertGen Pro</li><li>Klik menu <b>Aktivasi Lisensi</b></li><li>Paste kode lisensi di atas, lalu klik <b>Aktifkan</b></li></ol><p>Butuh bantuan? Silakan balas email ini atau hubungi WA kami: ${SUPPORT_WA}</p><hr><p style="font-size: 12px; color: #888; text-align: center;">© ImagineStudio</p></div>`;
+        // ✅ BRIEF 2 & 3: Tambah Link Mirror dan Buat Footer Unik (Cegah Gmail menyembunyikan pesan)
+        // Note: Menambahkan tanggal & Order ID di footer agar Gmail tidak memotong pesan karena dianggap "sama persis" dengan email sebelumnya.
+        const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+          <h2>🎉 License Key CertGen Pro Anda Sudah Siap!</h2>
+          <p>Halo <b>${customerName}</b>,</p>
+          <p>Terima kasih telah melakukan pembelian. Berikut adalah detail lisensi Anda:</p>
+          
+          <div style="background-color: #f4f4f4; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
+            <p style="margin: 0; font-size: 14px; color: #555;">KODE LISENSI ANDA:</p>
+            <h3 style="margin: 10px 0; font-family: monospace; font-size: 20px; color: #d32f2f; word-break: break-all;">${licenseKey}</h3>
+            <p style="margin: 0; font-size: 12px; color: #d32f2f;">*Segera aktifkan dalam ${tokenDays} hari agar kode tidak hangus!</p>
+          </div>
+          
+          <p><b>Paket:</b> ${paketRaw}</p>
+          
+          <h3>Langkah Aktivasi:</h3>
+          <ol>
+            <li>Download aplikasi melalui salah satu link berikut:
+              <br><br>
+              🔗 <a href="${APP_DOWNLOAD_LINK}"><b>Link Download Utama</b></a><br>
+              🔗 <a href="${APP_DOWNLOAD_LINK_MIRROR}"><b>Link Download Alternatif (Mirror)</b></a>
+              <br><br>
+            </li>
+            <li>Buka aplikasi CertGen Pro</li>
+            <li>Klik menu <b>Aktivasi Lisensi</b></li>
+            <li>Paste kode lisensi di atas, lalu klik <b>Aktifkan</b></li>
+          </ol>
+          
+          <p>Butuh bantuan? Silakan balas email ini atau hubungi WA kami: ${SUPPORT_WA}</p>
+          <hr>
+          <!-- Footer unik ini MENCEGAH Gmail menyembunyikan email di balik tombol [...] -->
+          <p style="font-size: 11px; color: #888; text-align: center;">
+            © ImagineStudio<br>
+            Ref: ${orderId} | ${new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB
+          </p>
+        </div>`;
+
         await axios.post('https://api.brevo.com/v3/smtp/email', {
           sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
           to: [{ email: customerEmail, name: customerName }],
@@ -118,7 +160,9 @@ module.exports = async function handler(req, res) {
     let waSent = false;
     if (customerWA) {
       try {
-        const waMessage = `Halo ${customerName}! 🎉\n\nLicense Key CertGen Pro Anda:\n*${licenseKey}*\n\nPaket: ${paketRaw}\n_PENTING: Segera aktifkan kode ini dalam ${tokenDays} hari di aplikasi._\n\nCara aktivasi:\n1. Buka CertGen Pro\n2. Klik Aktivasi Lisensi\n3. Paste key di atas → Aktif!\n\nLink Download App:\n${APP_DOWNLOAD_LINK}\n\nButuh bantuan? Balas pesan ini. Terima kasih! 🙏`;
+        // ✅ BRIEF 1 & 3: Tambah Link Mirror & ubah teks WA
+        const waMessage = `Halo ${customerName}! 🎉\n\nLicense Key CertGen Pro Anda:\n*${licenseKey}*\n\nPaket: ${paketRaw}\n_PENTING: Segera aktifkan kode ini dalam ${tokenDays} hari di aplikasi._\n\nCara aktivasi:\n1. Buka CertGen Pro\n2. Klik Aktivasi Lisensi\n3. Paste key di atas → Aktif!\n\n*Link Download App:*\n🔗 Utama: ${APP_DOWNLOAD_LINK}\n🔗 Alternatif (Mirror): ${APP_DOWNLOAD_LINK_MIRROR}\n\nButuh bantuan? Balas pesan ini. Terima kasih! 🙏`;
+        
         await axios.post('https://api.fonnte.com/send', { target: customerWA, message: waMessage, countryCode: "62" }, { headers: { 'Authorization': FONNTE_TOKEN } });
         waSent = true;
       } catch (err) { console.error(`❌ Gagal WA ke ${customerWA}`); }
