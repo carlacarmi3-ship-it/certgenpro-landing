@@ -15,6 +15,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 
 <style>
+  /* TAMBAHAN UNTUK GAMBAR CAROUSEL */
+.carousel-slide-inner.has-image {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.carousel-slide-inner.has-image::before {
+  display: none; /* Menghilangkan efek overlay kotak sebelumnya */
+}
+
+.carousel-slide-inner.has-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Gunakan 'contain' jika gambar tidak ingin terpotong, 'cover' agar penuh */
+  border-radius: var(--radius-md);
+  display: block;
+}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
 :root{
@@ -355,45 +373,60 @@ footer{background:var(--navy-deep);padding:48px 5% 28px;border-top:1px solid rgb
         <div class="carousel-track" id="carouselTrack">
           <!-- Slide 1 -->
           <div class="carousel-slide">
-            <div class="carousel-slide-inner">
-              <div class="demo-icon">📋</div>
-              <p>Dashboard Utama — Import & Kelola Peserta</p>
-              <small>Tampilkan screenshot dashboard aplikasi di sini</small>
+             <div class="carousel-slide-inner has-image">
+              <img src="screenshot1.png" alt="Screenshot Dashboard Utama">
             </div>
           </div>
           <!-- Slide 2 -->
           <div class="carousel-slide">
-            <div class="carousel-slide-inner">
-              <div class="demo-icon">🎨</div>
-              <p>Galeri Template Sertifikat Profesional</p>
-              <small>Tampilkan screenshot halaman pilih template di sini</small>
+            <div class="carousel-slide-inner has-image">
+              <img src="screenshot2.png" alt="Screenshot Galeri Template">
             </div>
           </div>
           <!-- Slide 3 -->
           <div class="carousel-slide">
-            <div class="carousel-slide-inner">
-              <div class="demo-icon">⚡</div>
-              <p>Proses Generate PDF Massal Real-time</p>
-              <small>Tampilkan screenshot progress generate di sini</small>
+            <div class="carousel-slide-inner has-image">
+              <img src="screenshot3.png" alt="Screenshot Galeri Template">
             </div>
           </div>
           <!-- Slide 4 -->
           <div class="carousel-slide">
-            <div class="carousel-slide-inner">
-              <div class="demo-icon">📧</div>
-              <p>Pengaturan Email Broadcast ke Peserta</p>
-              <small>Tampilkan screenshot fitur kirim email di sini</small>
+            <div class="carousel-slide-inner has-image">
+              <img src="screenshot4.png" alt="Screenshot Email Broadcast">
             </div>
           </div>
           <!-- Slide 5 -->
           <div class="carousel-slide">
-            <div class="carousel-slide-inner">
-              <div class="demo-icon">🤖</div>
-              <p>Fitur Prompt AI untuk Buat CSV Peserta</p>
-              <small>Tampilkan screenshot fitur AI prompt di sini</small>
+            <div class="carousel-slide-inner has-image">
+              <img src="screenshot5.png" alt="Screenshot Fitur AI Prompt">
+            </div>
+          </div>
+          <!-- Slide 6 -->
+          <div class="carousel-slide">
+            <div class="carousel-slide-inner has-image">
+              <img src="screenshot6.png" alt="Screenshot Fitur AI Prompt">
+            </div>
+          </div>
+          <!-- Slide 7 -->
+          <div class="carousel-slide">
+            <div class="carousel-slide-inner has-image">
+              <img src="screenshot7.png" alt="Screenshot Fitur AI Prompt">
+            </div>
+          </div>
+          <!-- Slide 8 -->
+          <div class="carousel-slide">
+            <div class="carousel-slide-inner has-image">
+              <img src="screenshot8.png" alt="Screenshot Fitur AI Prompt">
+            </div>
+          </div>
+          <!-- Slide 9 -->
+          <div class="carousel-slide">
+            <div class="carousel-slide-inner has-image">
+              <img src="screenshot9.png" alt="Screenshot Fitur AI Prompt">
             </div>
           </div>
         </div>
+      </div>
       </div>
       <div class="carousel-nav">
         <button class="carousel-btn" onclick="carouselPrev()" aria-label="Slide sebelumnya">‹</button>
@@ -403,9 +436,14 @@ footer{background:var(--navy-deep);padding:48px 5% 28px;border-top:1px solid rgb
           <div class="carousel-dot" onclick="carouselGoTo(2)"></div>
           <div class="carousel-dot" onclick="carouselGoTo(3)"></div>
           <div class="carousel-dot" onclick="carouselGoTo(4)"></div>
+          <div class="carousel-dot" onclick="carouselGoTo(5)"></div>
+          <div class="carousel-dot" onclick="carouselGoTo(6)"></div>
+          <div class="carousel-dot" onclick="carouselGoTo(7)"></div>
+          <div class="carousel-dot" onclick="carouselGoTo(8)"></div>
+          <div class="carousel-dot" onclick="carouselGoTo(9)"></div>
         </div>
         <button class="carousel-btn" onclick="carouselNext()" aria-label="Slide berikutnya">›</button>
-        <span class="carousel-caption" id="carouselCaption">1 / 5</span>
+        <span class="carousel-caption" id="carouselCaption">1 / 9</span>
       </div>
     </div>
 
@@ -417,6 +455,7 @@ footer{background:var(--navy-deep);padding:48px 5% 28px;border-top:1px solid rgb
       <div class="demo-step" role="listitem">3️⃣ Generate Massal</div>
       <div class="demo-arrow" aria-hidden="true">→</div>
       <div class="demo-step" role="listitem">4️⃣ Kirim ke Email Peserta ✅</div>
+
     </div>
   </div>
 </section>
@@ -771,7 +810,7 @@ function showNextSale() {
 
 // ── CAROUSEL ──
 var carouselIndex = 0;
-var carouselTotal = 5;
+var carouselTotal = 9;
 var carouselTimer = null;
 
 function carouselGoTo(idx) {
