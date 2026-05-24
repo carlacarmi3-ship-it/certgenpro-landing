@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Syarat &amp; Ketentuan — CertGen Pro</title>
+<meta name="description" content="Syarat dan Ketentuan penggunaan CertGen Pro oleh ImagineStudio. Baca dengan seksama sebelum menggunakan layanan kami.">
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --navy:#0d1b4b;
+  --navy-deep:#070e2e;
+  --navy-mid:#1a237e;
+  --navy-light:#283593;
+  --gold:#f9a825;
+  --gold-light:#ffd54f;
+  --gold-dark:#f57f17;
+  --cream:#fffbf0;
+  --cream-2:#fef9e7;
+  --white:#ffffff;
+  --gray-50:#f8f9fc;
+  --gray-100:#eef0f6;
+  --gray-200:#d8dce8;
+  --gray-400:#8892b0;
+  --gray-600:#4a5568;
+  --gray-800:#1a202c;
+  --green:#00c853;
+  --red:#e53935;
+  --red-soft:#fff3f3;
+  --radius-sm:8px;
+  --radius-md:12px;
+  --radius-lg:20px;
+  --radius-xl:28px;
+  --shadow-sm:0 2px 8px rgba(13,27,75,.08);
+  --shadow-md:0 8px 32px rgba(13,27,75,.14);
+  --font-head:'DM Serif Display',serif;
+  --font-body:'Plus Jakarta Sans',sans-serif;
+}
+
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);color:var(--gray-800);background:var(--gray-50);line-height:1.6;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column;}
+
+/* ── NAVBAR ── */
+.navbar{position:sticky;top:0;z-index:1000;background:rgba(7,14,46,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(249,168,37,.15);padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:68px;}
+.navbar-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-icon{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--gold) 0%,var(--gold-dark) 100%);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--navy-deep);font-family:var(--font-body);flex-shrink:0;}
+.logo-text{font-size:1.15rem;font-weight:700;color:var(--white);letter-spacing:-.02em}
+.logo-text span{color:var(--gold)}
+.btn-back{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.6);font-size:.85rem;font-weight:500;text-decoration:none;padding:8px 14px;border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,.1);transition:all .2s;}
+.btn-back:hover{color:var(--white);border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.05)}
+
+/* ── PAGE HEADER ── */
+.page-header{background:linear-gradient(150deg,var(--navy-deep) 0%,var(--navy-mid) 60%,#1565c0 100%);padding:56px 5% 72px;text-align:center;position:relative;overflow:hidden;}
+.page-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 80% at 50% 0%,rgba(249,168,37,.07),transparent 70%);pointer-events:none;}
+.page-header::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:60px;background:var(--gray-50);clip-path:ellipse(55% 100% at 50% 100%);}
+.page-header-inner{position:relative;z-index:1;max-width:680px;margin:0 auto}
+.header-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(249,168,37,.12);border:1px solid rgba(249,168,37,.28);color:var(--gold-light);padding:6px 16px;border-radius:40px;font-size:.8rem;font-weight:600;margin-bottom:18px;}
+.page-header h1{font-family:var(--font-head);font-size:2.4rem;line-height:1.15;color:var(--white);margin-bottom:12px;}
+.page-header p{font-size:.95rem;color:rgba(255,255,255,.65)}
+
+/* ── MAIN ── */
+main{flex:1;padding:48px 5% 72px}
+.main-inner{max-width:780px;margin:0 auto}
+
+/* ── TOC ── */
+.toc{background:var(--cream-2);border:1px solid rgba(249,168,37,.25);border-radius:var(--radius-md);padding:24px 28px;margin-bottom:40px;}
+.toc-title{font-size:.85rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;}
+.toc ol{padding-left:18px;display:flex;flex-direction:column;gap:7px;}
+.toc ol li a{font-size:.88rem;color:var(--navy-mid);text-decoration:none;font-weight:500;transition:color .2s;}
+.toc ol li a:hover{color:var(--gold-dark)}
+
+/* ── CONTENT ── */
+.content-card{background:var(--white);border:1px solid var(--gray-100);border-radius:var(--radius-lg);padding:40px 48px;box-shadow:var(--shadow-sm);}
+.update-note{display:flex;align-items:center;gap:10px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:36px;font-size:.83rem;color:var(--gray-600);}
+
+.section-block{margin-bottom:40px;padding-bottom:40px;border-bottom:1px solid var(--gray-100);}
+.section-block:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
+.section-block h2{font-family:var(--font-head);font-size:1.4rem;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.section-block h2 .sec-num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--navy-mid),var(--navy-deep));color:var(--white);font-size:.8rem;font-weight:800;font-family:var(--font-body);flex-shrink:0;}
+.section-block p{font-size:.92rem;color:var(--gray-600);line-height:1.8;margin-bottom:12px;}
+.section-block p:last-child{margin-bottom:0}
+.section-block ul{padding-left:0;list-style:none;display:flex;flex-direction:column;gap:8px;margin:12px 0;}
+.section-block ul li{font-size:.92rem;color:var(--gray-600);line-height:1.7;display:flex;align-items:flex-start;gap:9px;}
+.section-block ul li::before{content:'✓';color:var(--green);font-weight:800;flex-shrink:0;margin-top:2px;}
+.section-block ul.list-cross li::before{content:'✕';color:var(--red);}
+
+/* ── HIGHLIGHT BOX ── */
+.highlight-box{background:var(--red-soft);border:1.5px solid #ffcdd2;border-radius:var(--radius-md);padding:20px 24px;margin:16px 0;}
+.highlight-box p{color:#b71c1c;font-size:.91rem;line-height:1.75;margin:0}
+.highlight-box strong{font-weight:700}
+
+.notice-box{background:var(--cream-2);border:1.5px solid rgba(249,168,37,.3);border-radius:var(--radius-md);padding:20px 24px;margin:16px 0;}
+.notice-box p{color:var(--navy);font-size:.91rem;line-height:1.75;margin:0}
+
+/* ── CONTACT BOX ── */
+.contact-box{background:linear-gradient(135deg,var(--navy-deep),var(--navy-mid));border-radius:var(--radius-lg);padding:32px 40px;text-align:center;margin-top:40px;}
+.contact-box h3{font-family:var(--font-head);font-size:1.4rem;color:var(--white);margin-bottom:8px;}
+.contact-box p{font-size:.9rem;color:rgba(255,255,255,.7);margin-bottom:20px;}
+.contact-links{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;}
+.contact-link{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:var(--radius-sm);font-size:.88rem;font-weight:600;font-family:var(--font-body);text-decoration:none;transition:all .2s;}
+.contact-link.email{background:rgba(255,255,255,.1);color:var(--white);border:1px solid rgba(255,255,255,.2);}
+.contact-link.email:hover{background:rgba(255,255,255,.18)}
+.contact-link.wa{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:var(--navy-deep);}
+.contact-link.wa:hover{box-shadow:0 6px 20px rgba(249,168,37,.4);transform:translateY(-1px)}
+
+/* ── FOOTER ── */
+footer{background:var(--navy-deep);padding:36px 5% 24px;border-top:1px solid rgba(255,255,255,.06);}
+.footer-inner{max-width:780px;margin:0 auto;text-align:center;}
+.footer-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-bottom:16px;}
+.footer-links-row{display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:16px;}
+.footer-links-row a{font-size:.82rem;color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s;}
+.footer-links-row a:hover{color:var(--gold)}
+.footer-links-row a.active{color:var(--gold-light);font-weight:600;}
+.footer-copy{font-size:.78rem;color:rgba(255,255,255,.3)}
+
+@media(max-width:700px){
+  .page-header h1{font-size:1.85rem}
+  .content-card{padding:28px 22px}
+  .contact-box{padding:24px 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" role="navigation" aria-label="Menu utama">
+  <a href="/" class="navbar-logo" aria-label="CertGen Pro - Halaman Utama">
+    <div class="logo-icon" aria-hidden="true">C</div>
+    <span class="logo-text">CertGen <span>Pro</span></span>
+  </a>
+  <a href="/" class="btn-back">← Kembali ke Beranda</a>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="header-badge">📋 Perjanjian Pengguna</div>
+    <h1>Syarat &amp; Ketentuan</h1>
+    <p>Harap baca syarat dan ketentuan ini dengan seksama sebelum menggunakan CertGen Pro.</p>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main>
+  <div class="main-inner">
+
+    <!-- TABLE OF CONTENTS -->
+    <nav class="toc" aria-label="Daftar isi">
+      <div class="toc-title">Daftar Isi</div>
+      <ol>
+        <li><a href="#s1">Penerimaan Syarat</a></li>
+        <li><a href="#s2">Deskripsi Layanan</a></li>
+        <li><a href="#s3">Lisensi Penggunaan</a></li>
+        <li><a href="#s4">Hak Cipta &amp; Kekayaan Intelektual</a></li>
+        <li><a href="#s5">Larangan Penjualan Kembali</a></li>
+        <li><a href="#s6">Pembelian &amp; Pembayaran</a></li>
+        <li><a href="#s7">Aktivasi &amp; Masa Aktif Lisensi</a></li>
+        <li><a href="#s8">Kebijakan Pengembalian Dana</a></li>
+        <li><a href="#s9">Batasan Tanggung Jawab</a></li>
+        <li><a href="#s10">Penghentian Layanan</a></li>
+        <li><a href="#s11">Perubahan Syarat &amp; Ketentuan</a></li>
+        <li><a href="#s12">Hukum yang Berlaku</a></li>
+        <li><a href="#s13">Hubungi Kami</a></li>
+      </ol>
+    </nav>
+
+    <!-- CONTENT -->
+    <div class="content-card">
+
+      <div class="update-note" role="note">
+        📅 <span>Terakhir diperbarui: <strong>1 Januari 2025</strong> &nbsp;·&nbsp; Berlaku untuk semua pengguna CertGen Pro</span>
+      </div>
+
+      <p style="font-size:.93rem;color:var(--gray-600);line-height:1.85;margin-bottom:36px;">
+        Syarat dan Ketentuan ini merupakan perjanjian yang mengikat secara hukum antara Anda ("Pengguna") dan <strong>ImagineStudio</strong> ("Perusahaan") terkait penggunaan aplikasi dan layanan <strong>CertGen Pro</strong>. Dengan mengunduh, menginstall, mengaktifkan, atau menggunakan CertGen Pro, Anda menyatakan telah membaca, memahami, dan menyetujui seluruh ketentuan yang tercantum di sini.
+      </p>
+
+      <!-- 1 -->
+      <div class="section-block" id="s1">
+        <h2><span class="sec-num">1</span>Penerimaan Syarat</h2>
+        <p>Penggunaan CertGen Pro berarti Anda menyetujui Syarat dan Ketentuan ini beserta Kebijakan Privasi kami. Jika Anda tidak setuju dengan salah satu ketentuan yang ada, Anda tidak diperbolehkan menggunakan Layanan kami.</p>
+        <p>Anda harus berusia minimal <strong>17 tahun</strong> untuk menggunakan Layanan ini. Dengan menggunakan Layanan, Anda menyatakan bahwa Anda memenuhi persyaratan usia tersebut.</p>
+      </div>
+
+      <!-- 2 -->
+      <div class="section-block" id="s2">
+        <h2><span class="sec-num">2</span>Deskripsi Layanan</h2>
+        <p>CertGen Pro adalah aplikasi desktop berbasis Windows yang dirancang untuk membantu pengguna membuat dan mendistribusikan sertifikat PDF secara massal. Fitur utama yang tersedia meliputi:</p>
+        <ul>
+          <li>Generate sertifikat PDF massal dari data CSV.</li>
+          <li>Penggunaan template sertifikat yang dapat dikustomisasi.</li>
+          <li>Pengiriman sertifikat langsung ke email peserta.</li>
+          <li>Manajemen data peserta dan template.</li>
+        </ul>
+        <p>Kami berhak menambah, mengubah, atau menghentikan fitur tertentu sewaktu-waktu dengan atau tanpa pemberitahuan sebelumnya, sepanjang tidak mengurangi fungsi inti yang telah dibeli.</p>
+      </div>
+
+      <!-- 3 -->
+      <div class="section-block" id="s3">
+        <h2><span class="sec-num">3</span>Lisensi Penggunaan</h2>
+        <p>Dengan membeli paket CertGen Pro, ImagineStudio memberikan Anda lisensi yang bersifat:</p>
+        <ul>
+          <li><strong>Non-eksklusif:</strong> Lisensi ini tidak memberikan hak eksklusif kepada Anda.</li>
+          <li><strong>Tidak dapat dipindahtangankan:</strong> Lisensi hanya berlaku untuk satu perangkat (PC) dan satu pengguna yang terdaftar.</li>
+          <li><strong>Terbatas:</strong> Sesuai dengan durasi paket yang dibeli (Harian, Bulanan, Tahunan, atau Lifetime).</li>
+          <li><strong>Personal:</strong> Hanya untuk penggunaan pribadi atau keperluan organisasi/lembaga tempat Anda bernaung, bukan untuk dijual kembali.</li>
+        </ul>
+        <p>Satu lisensi hanya berlaku untuk <strong>satu perangkat PC</strong>. Penggunaan di lebih dari satu perangkat secara bersamaan tidak diizinkan tanpa pembelian lisensi tambahan.</p>
+      </div>
+
+      <!-- 4 -->
+      <div class="section-block" id="s4">
+        <h2><span class="sec-num">4</span>Hak Cipta &amp; Kekayaan Intelektual</h2>
+        <p>CertGen Pro, termasuk seluruh kode program, antarmuka pengguna, desain, logo, merek dagang, template bawaan, dokumentasi, dan konten terkait adalah <strong>milik eksklusif ImagineStudio</strong> dan dilindungi oleh hukum Hak Cipta Republik Indonesia (Undang-Undang No. 28 Tahun 2014 tentang Hak Cipta) serta peraturan kekayaan intelektual internasional yang berlaku.</p>
+        <div class="highlight-box" role="note">
+          <p>⚠️ <strong>Dilarang keras</strong> melakukan rekayasa balik (reverse engineering), mendekompilasi, membongkar, memodifikasi, mendistribusikan ulang, atau membuat karya turunan dari aplikasi CertGen Pro dalam bentuk apapun tanpa izin tertulis dari ImagineStudio.</p>
+        </div>
+        <p>Pembelian lisensi hanya memberikan Anda <strong>hak penggunaan</strong> atas aplikasi—bukan kepemilikan atas kode sumber atau kekayaan intelektual yang terkandung di dalamnya.</p>
+        <p>Seluruh nama, logo, dan merek "CertGen Pro" serta "ImagineStudio" adalah merek milik ImagineStudio. Penggunaan merek tersebut tanpa izin tertulis dilarang.</p>
+      </div>
+
+      <!-- 5 -->
+      <div class="section-block" id="s5">
+        <h2><span class="sec-num">5</span>Larangan Penjualan Kembali</h2>
+        <div class="highlight-box" role="alert">
+          <p>🚫 <strong>Dilarang keras memperjualbelikan kembali</strong> lisensi CertGen Pro dalam bentuk apapun. Termasuk namun tidak terbatas pada:</p>
+        </div>
+        <ul class="list-cross">
+          <li>Menjual kembali license key yang telah Anda beli kepada pihak lain.</li>
+          <li>Mendistribusikan atau membagikan license key secara gratis maupun berbayar kepada pihak ketiga.</li>
+          <li>Menawarkan layanan berbasis CertGen Pro kepada pihak lain dengan menggunakan satu lisensi yang sama secara bersamaan.</li>
+          <li>Menjual akses atau penggunaan aplikasi CertGen Pro kepada pihak ketiga melalui platform manapun.</li>
+          <li>Menjadi reseller, agen, atau distributor tidak resmi tanpa perjanjian kemitraan tertulis dari ImagineStudio.</li>
+          <li>Menggunakan aplikasi CertGen Pro sebagai bagian dari layanan komersial kepada pihak lain menggunakan satu lisensi bersama.</li>
+        </ul>
+        <div class="notice-box" role="note">
+          <p>💡 Jika Anda tertarik menjadi <strong>mitra resmi atau reseller resmi</strong> CertGen Pro, silakan hubungi kami di email@imaginestudio.online untuk informasi lebih lanjut tentang program kemitraan.</p>
+        </div>
+        <p>Pelanggaran ketentuan ini akan mengakibatkan <strong>pencabutan lisensi secara sepihak tanpa pengembalian dana</strong>, dan ImagineStudio berhak mengambil tindakan hukum yang diperlukan.</p>
+      </div>
+
+      <!-- 6 -->
+      <div class="section-block" id="s6">
+        <h2><span class="sec-num">6</span>Pembelian &amp; Pembayaran</h2>
+        <p>Seluruh transaksi pembelian diproses melalui Midtrans, payment gateway yang terdaftar dan diawasi oleh Bank Indonesia. Dengan melakukan pembelian, Anda menyetujui bahwa:</p>
+        <ul>
+          <li>Semua harga yang tertera adalah dalam mata uang Rupiah (IDR) dan sudah termasuk biaya layanan.</li>
+          <li>Pembayaran bersifat final setelah transaksi berhasil dikonfirmasi.</li>
+          <li>Anda bertanggung jawab atas keakuratan data yang diisi saat pembelian (nama, email, nomor WhatsApp).</li>
+          <li>Lisensi akan dikirimkan ke alamat email yang Anda daftarkan dalam waktu 1–2 menit setelah pembayaran berhasil.</li>
+        </ul>
+        <p>ImagineStudio berhak mengubah harga paket sewaktu-waktu. Perubahan harga tidak berlaku untuk lisensi yang telah dibeli.</p>
+      </div>
+
+      <!-- 7 -->
+      <div class="section-block" id="s7">
+        <h2><span class="sec-num">7</span>Aktivasi &amp; Masa Aktif Lisensi</h2>
+        <p>Ketentuan terkait aktivasi dan masa aktif lisensi:</p>
+        <ul>
+          <li>Masa aktif lisensi mulai berjalan sejak tanggal <strong>aktivasi pertama</strong> di aplikasi, bukan sejak tanggal pembelian.</li>
+          <li>Satu license key hanya dapat diaktifkan pada <strong>satu perangkat</strong>. Jika ingin pindah ke perangkat lain, hubungi support kami via WhatsApp.</li>
+          <li>Lisensi yang telah habis masa aktifnya harus diperpanjang untuk dapat menggunakan aplikasi kembali.</li>
+          <li>Paket Lifetime tidak memiliki batas masa aktif selama aplikasi CertGen Pro masih beroperasi.</li>
+          <li>Jika ada pembaruan (update) aplikasi, pembaruan akan disertakan saat pengguna melakukan perpanjangan lisensi.</li>
+        </ul>
+      </div>
+
+      <!-- 8 -->
+      <div class="section-block" id="s8">
+        <h2><span class="sec-num">8</span>Kebijakan Pengembalian Dana</h2>
+        <p>Mengingat sifat produk digital yang langsung dapat digunakan setelah aktivasi, secara umum kami <strong>tidak menerima pengembalian dana (refund)</strong> setelah lisensi dikirimkan dan/atau diaktifkan.</p>
+        <p>Namun, kami dapat mempertimbangkan pengembalian dana dalam kondisi berikut:</p>
+        <ul>
+          <li>Terjadi pembayaran ganda untuk paket yang sama akibat kesalahan sistem.</li>
+          <li>Lisensi tidak terkirim dalam waktu 24 jam dan tim support tidak dapat menyelesaikan masalah tersebut.</li>
+          <li>Terdapat kerusakan aplikasi yang signifikan yang tidak dapat diperbaiki oleh tim kami.</li>
+        </ul>
+        <p>Untuk mengajukan permintaan refund, hubungi kami di email@imaginestudio.online dengan menyertakan bukti transaksi dalam waktu maksimal <strong>3 hari</strong> setelah pembelian.</p>
+      </div>
+
+      <!-- 9 -->
+      <div class="section-block" id="s9">
+        <h2><span class="sec-num">9</span>Batasan Tanggung Jawab</h2>
+        <p>CertGen Pro disediakan "sebagaimana adanya" (as is). ImagineStudio tidak menjamin bahwa aplikasi akan:</p>
+        <ul class="list-cross">
+          <li>Bebas dari bug, error, atau gangguan teknis sepenuhnya.</li>
+          <li>Selalu tersedia tanpa gangguan pada setiap saat.</li>
+          <li>Kompatibel dengan semua konfigurasi hardware dan software yang ada.</li>
+        </ul>
+        <p>ImagineStudio tidak bertanggung jawab atas kerugian tidak langsung, insidental, atau konsekuensial yang timbul dari penggunaan atau ketidakmampuan menggunakan aplikasi, termasuk kehilangan data atau keuntungan bisnis.</p>
+        <p>Tanggung jawab maksimal ImagineStudio kepada Anda dalam keadaan apapun tidak akan melebihi jumlah yang telah Anda bayarkan untuk lisensi CertGen Pro.</p>
+      </div>
+
+      <!-- 10 -->
+      <div class="section-block" id="s10">
+        <h2><span class="sec-num">10</span>Penghentian Layanan</h2>
+        <p>ImagineStudio berhak menghentikan atau menangguhkan akses Anda tanpa pemberitahuan sebelumnya jika:</p>
+        <ul>
+          <li>Anda melanggar ketentuan dalam perjanjian ini, terutama terkait penjualan kembali lisensi atau penggunaan ilegal.</li>
+          <li>Anda menggunakan aplikasi untuk tujuan yang melanggar hukum yang berlaku di Indonesia.</li>
+          <li>Anda melakukan manipulasi atau penipuan terkait sistem lisensi.</li>
+        </ul>
+        <p>Anda juga dapat menghentikan penggunaan layanan kapan saja dengan tidak memperpanjang lisensi Anda. Penghentian ini tidak memberikan hak atas pengembalian dana untuk sisa masa aktif yang belum digunakan.</p>
+      </div>
+
+      <!-- 11 -->
+      <div class="section-block" id="s11">
+        <h2><span class="sec-num">11</span>Perubahan Syarat &amp; Ketentuan</h2>
+        <p>ImagineStudio berhak mengubah Syarat dan Ketentuan ini sewaktu-waktu. Perubahan yang bersifat material akan diberitahukan kepada pengguna aktif melalui email paling lambat <strong>7 hari</strong> sebelum perubahan berlaku efektif.</p>
+        <p>Penggunaan CertGen Pro setelah tanggal efektif perubahan dianggap sebagai persetujuan Anda terhadap syarat yang telah diperbarui. Jika Anda tidak menyetujui perubahan tersebut, Anda harus menghentikan penggunaan Layanan.</p>
+      </div>
+
+      <!-- 12 -->
+      <div class="section-block" id="s12">
+        <h2><span class="sec-num">12</span>Hukum yang Berlaku</h2>
+        <p>Syarat dan Ketentuan ini diatur dan ditafsirkan berdasarkan hukum yang berlaku di <strong>Negara Kesatuan Republik Indonesia</strong>. Setiap sengketa yang timbul dari atau terkait dengan perjanjian ini akan diselesaikan melalui musyawarah untuk mufakat.</p>
+        <p>Apabila penyelesaian secara musyawarah tidak tercapai dalam waktu 30 hari, sengketa akan diselesaikan melalui lembaga arbitrase atau pengadilan yang berwenang di Indonesia.</p>
+      </div>
+
+      <!-- 13 -->
+      <div class="section-block" id="s13">
+        <h2><span class="sec-num">13</span>Hubungi Kami</h2>
+        <p>Jika Anda memiliki pertanyaan, keberatan, atau membutuhkan klarifikasi terkait Syarat dan Ketentuan ini, silakan hubungi kami:</p>
+        <ul>
+          <li><strong>Email:</strong> email@imaginestudio.online</li>
+          <li><strong>WhatsApp:</strong> 089627312600</li>
+          <li><strong>Pengelola:</strong> ImagineStudio, Indonesia</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- CONTACT BOX -->
+    <div class="contact-box" role="complementary" aria-label="Kontak dukungan">
+      <h3>Ada Pertanyaan tentang Ketentuan Ini?</h3>
+      <p>Kami siap menjelaskan setiap poin yang kurang jelas. Hubungi tim kami kapan saja.</p>
+      <div class="contact-links">
+        <a href="mailto:email@imaginestudio.online" class="contact-link email">📧 email@imaginestudio.online</a>
+        <a href="https://wa.me/6289627312600" target="_blank" rel="noopener noreferrer" class="contact-link wa">💬 WhatsApp Kami</a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer role="contentinfo">
+  <div class="footer-inner">
+    <a href="/" class="footer-logo" aria-label="CertGen Pro">
+      <div class="logo-icon" aria-hidden="true">C</div>
+      <span class="logo-text">CertGen <span>Pro</span></span>
+    </a>
+    <div class="footer-links-row">
+      <a href="/">Beranda</a>
+      <a href="/#pricing">Harga</a>
+      <a href="/renew.html">Perpanjang Lisensi</a>
+      <a href="/kebijakan-privasi.html">Kebijakan Privasi</a>
+      <a href="/syarat-ketentuan.html" class="active">Syarat &amp; Ketentuan</a>
+    </div>
+    <p class="footer-copy">© 2025 ImagineStudio. Hak cipta dilindungi undang-undang.</p>
+  </div>
+</footer>
+
+</body>
+</html>
