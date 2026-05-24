@@ -28,23 +28,17 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
 
   try {
-    const { name, email, whatsapp, paket } = req.body;
+    // ✅ Menangkap kota dari req.body (opsional, jika diblock adblock akan kosong)
+    const { name, email, whatsapp, paket, kota } = req.body;
 
-    // --- 1. VALIDASI INPUT ---
     if (!name || !email || !whatsapp || !paket) {
       return res.status(400).json({ message: 'Semua kolom wajib diisi!' });
     }
 
-    // --- 2. VALIDASI PAKET & HARGA ---
     const paketKey = paket.toLowerCase().trim();
     const expectedPrice = PRICELIST[paketKey];
 
@@ -52,32 +46,20 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ message: 'Paket tidak dikenali oleh sistem.' });
     }
 
-    // --- 3. BUAT ORDER ID ---
     const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
     const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
     const orderId = `CGP-${timestamp}-${randomStr}`;
 
-    // ✅ FIX: custom_field1 = name, custom_field2 = email, custom_field3 = JSON{wa, paket}
-    // Midtrans tidak selalu mengirim email di payload webhook, jadi kita simpan sendiri di custom_field
     const parameter = {
-      transaction_details: {
-        order_id: orderId,
-        gross_amount: expectedPrice
-      },
-      customer_details: {
-        first_name: name,
-        email: email,
-        phone: whatsapp
-      },
+      transaction_details: { order_id: orderId, gross_amount: expectedPrice },
+      customer_details: { first_name: name, email: email, phone: whatsapp },
       item_details: [{
-        id: paketKey.replace(/\s/g, '_'),
-        price: expectedPrice,
-        quantity: 1,
-        name: `Lisensi CertGen Pro - ${paket}`
+        id: paketKey.replace(/\s/g, '_'), price: expectedPrice, quantity: 1, name: `Lisensi CertGen Pro - ${paket}`
       }],
-      custom_field1: name,                                          // Nama customer
-      custom_field2: email,                                         // ✅ Email customer (pindah dari whatsapp)
-      custom_field3: JSON.stringify({ wa: whatsapp, paket: paket }),// ✅ WA & paket digabung JSON
+      custom_field1: name,
+      custom_field2: email,
+      // ✅ Menyisipkan KOTA ke JSON bersama WA & Paket untuk webhook
+      custom_field3: JSON.stringify({ wa: whatsapp, paket: paket, kota: kota || "" }),
       callbacks: {
         finish: `https://${req.headers.host}/thank-you.html?order=${orderId}`,
         error: `https://${req.headers.host}/renew.html?error=1`,
@@ -85,11 +67,9 @@ module.exports = async function handler(req, res) {
       }
     };
 
-    // --- 4. REQUEST KE MIDTRANS ---
     const transaction = await snap.createTransaction(parameter);
     const snapToken = transaction.token;
 
-    // --- 5. SIMPAN KE DATABASE SUPABASE ---
     const { error: dbError } = await supabase
       .from('transactions')
       .insert([{
@@ -103,21 +83,12 @@ module.exports = async function handler(req, res) {
         created_at:     new Date().toISOString()
       }]);
 
-    if (dbError) {
-      console.error('Supabase Insert Error:', JSON.stringify(dbError, null, 2));
-      throw new Error('Gagal menyimpan data ke database.');
-    }
+    if (dbError) throw new Error('Gagal menyimpan data ke database.');
 
-    // --- 6. KEMBALIKAN TOKEN KE FRONTEND ---
-    return res.status(200).json({
-      snap_token: snapToken,
-      order_id: orderId
-    });
+    return res.status(200).json({ snap_token: snapToken, order_id: orderId });
 
   } catch (error) {
     console.error('Error Create Payment:', error);
-    return res.status(500).json({
-      message: error.message || 'Terjadi kesalahan pada server saat membuat pembayaran.'
-    });
+    return res.status(500).json({ message: error.message || 'Terjadi kesalahan sistem.' });
   }
 };
