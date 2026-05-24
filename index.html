@@ -63,9 +63,9 @@ body{font-family:var(--font-body);color:var(--gray-800);background:var(--white);
 .hero::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:80px;background:var(--white);clip-path:ellipse(55% 100% at 50% 100%);}
 .hero-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;position:relative;z-index:1;}
 .hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(249,168,37,.15);border:1px solid rgba(249,168,37,.3);color:var(--gold-light);padding:7px 16px;border-radius:40px;font-size:.82rem;font-weight:600;margin-bottom:24px;}
-.hero h1{font-family:var(--font-head);font-size:3rem;line-height:1.12;color:var(--white);margin-bottom:20px;}
+.hero h1{font-family:var(--font-head);font-size:2.75rem;line-height:1.15;color:var(--white);margin-bottom:20px;}
 .hero h1 em{color:var(--gold);font-style:normal}
-.hero-sub{font-size:1.05rem;color:rgba(255,255,255,.75);margin-bottom:36px;line-height:1.7}
+.hero-sub{font-size:1rem;color:rgba(255,255,255,.75);margin-bottom:36px;line-height:1.75}
 .btn-primary{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--gold) 0%,var(--gold-dark) 100%);color:var(--navy-deep);padding:16px 32px;border-radius:var(--radius-md);font-size:1rem;font-weight:700;font-family:var(--font-body);border:none;cursor:pointer;text-decoration:none;box-shadow:0 8px 24px rgba(249,168,37,.4);transition:all .25s;}
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(249,168,37,.5)}
 .btn-primary:active{transform:translateY(0)}
@@ -89,22 +89,22 @@ body{font-family:var(--font-body);color:var(--gray-800);background:var(--white);
 .section{padding:80px 5%}
 .section-inner{max-width:1100px;margin:0 auto}
 .section-tag{display:inline-block;background:var(--cream-2);color:var(--gold-dark);border:1px solid rgba(249,168,37,.3);padding:5px 14px;border-radius:40px;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;}
-.section-title{font-family:var(--font-head);font-size:2.2rem;line-height:1.2;color:var(--navy);margin-bottom:12px;}
-.section-sub{font-size:1rem;color:var(--gray-600);max-width:560px}
+.section-title{font-family:var(--font-head);font-size:2rem;line-height:1.25;color:var(--navy);margin-bottom:12px;}
+.section-sub{font-size:.97rem;color:var(--gray-600);max-width:560px}
 .pain{background:var(--gray-50);border-top:1px solid var(--gray-100);border-bottom:1px solid var(--gray-100)}
 .pain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
 .pain-card{background:var(--white);border:1.5px solid var(--gray-200);border-radius:var(--radius-lg);padding:28px;position:relative;transition:all .25s;}
 .pain-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
 .pain-icon{font-size:2.2rem;margin-bottom:16px}
-.pain-card h3{font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:10px;line-height:1.4}
-.pain-card p{font-size:.88rem;color:var(--gray-600);line-height:1.65}
+.pain-card h3{font-size:1.05rem;font-weight:700;color:var(--navy);margin-bottom:10px;line-height:1.4}
+.pain-card p{font-size:.92rem;color:var(--gray-600);line-height:1.7}
 .pain-close{margin-top:40px;text-align:center;font-size:1.05rem;font-weight:600;color:var(--navy-mid);padding:20px;background:var(--cream-2);border-radius:var(--radius-md);border:1px solid rgba(249,168,37,.2);}
 .solution-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:48px}
 .solution-card{background:var(--white);border:1px solid var(--gray-100);border-radius:var(--radius-lg);padding:28px;text-align:center;box-shadow:var(--shadow-sm);transition:all .3s;}
 .solution-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:rgba(249,168,37,.3)}
 .solution-icon-wrap{width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,#e3f2fd,#bbdefb);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin:0 auto 16px;}
-.solution-card h3{font-size:.95rem;font-weight:700;color:var(--navy);margin-bottom:8px}
-.solution-card p{font-size:.84rem;color:var(--gray-600);line-height:1.6}
+.solution-card h3{font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:8px}
+.solution-card p{font-size:.88rem;color:var(--gray-600);line-height:1.65}
 .demo{background:linear-gradient(170deg,var(--navy-deep) 0%,var(--navy-mid) 100%)}
 .demo .section-title,.demo .section-sub,.demo .section-tag{color:var(--white)}
 .demo .section-tag{background:rgba(249,168,37,.15);color:var(--gold-light);border-color:rgba(249,168,37,.25)}
@@ -139,8 +139,27 @@ body{font-family:var(--font-body);color:var(--gray-800);background:var(--white);
 .price-header .section-tag{margin:0 auto 12px;display:inline-block}
 .price-header .section-title{margin:0 auto 10px}
 .price-header .section-sub{margin:0 auto;text-align:center}
-.price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1000px;margin:0 auto;}
-.price-card{border:1.5px solid var(--gray-200);border-radius:var(--radius-xl);padding:36px 28px;transition:all .3s;position:relative;background:var(--white);}
+.price-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;max-width:1100px;margin:0 auto;}
+
+/* ── CAROUSEL CSS ── */
+.carousel-wrap{position:relative;margin-top:48px;overflow:hidden;border-radius:var(--radius-xl);border:1.5px solid rgba(255,255,255,.12);box-shadow:0 32px 80px rgba(0,0,0,.4);}
+.carousel-bar{background:#1e2744;padding:14px 20px;display:flex;align-items:center;gap:10px;}
+.carousel-track-outer{overflow:hidden;background:#f0f2f7;}
+.carousel-track{display:flex;transition:transform .45s cubic-bezier(.4,0,.2,1);}
+.carousel-slide{min-width:100%;display:flex;align-items:center;justify-content:center;padding:32px 24px;min-height:340px;}
+.carousel-slide-inner{width:100%;max-width:820px;background:linear-gradient(135deg,#e8eaf6 0%,#c5cae9 50%,#9fa8da 100%);border-radius:var(--radius-md);min-height:280px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;border:2px dashed #9fa8da;position:relative;overflow:hidden;}
+.carousel-slide-inner::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(26,35,126,.05),rgba(249,168,37,.05));}
+.carousel-slide-inner .demo-icon{font-size:3rem;position:relative;}
+.carousel-slide-inner p{font-size:1rem;color:#3949ab;font-weight:700;position:relative;}
+.carousel-slide-inner small{font-size:.82rem;color:#7986cb;position:relative;}
+.carousel-nav{display:flex;align-items:center;justify-content:center;gap:12px;padding:16px 20px;background:#1e2744;}
+.carousel-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:var(--white);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.carousel-btn:hover{background:rgba(249,168,37,.3);border-color:var(--gold);}
+.carousel-dots{display:flex;gap:8px;}
+.carousel-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .2s;}
+.carousel-dot.active{background:var(--gold);width:24px;border-radius:40px;}
+.carousel-caption{font-size:.78rem;color:rgba(255,255,255,.4);margin-left:auto;}
+.price-card{border:1.5px solid var(--gray-200);border-radius:var(--radius-xl);padding:28px 22px;transition:all .3s;position:relative;background:var(--white);}
 .price-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
 .price-card.featured{border-color:var(--navy-mid);border-width:2px;box-shadow:0 0 0 4px rgba(26,35,126,.08),var(--shadow-md);background:var(--white);z-index:1;}
 .price-badge{display:inline-flex;align-items:center;gap:6px;background:var(--navy-mid);color:var(--white);font-size:.72rem;font-weight:700;padding:5px 12px;border-radius:40px;margin-bottom:20px;letter-spacing:.04em;}
@@ -149,7 +168,7 @@ body{font-family:var(--font-body);color:var(--gray-800);background:var(--white);
 .price-card h3{font-size:1.1rem;font-weight:700;color:var(--navy);margin-bottom:4px}
 .price-desc{font-size:.83rem;color:var(--gray-400);margin-bottom:20px}
 .price-old{font-size:.88rem;color:var(--gray-400);text-decoration:line-through}
-.price-amount{font-size:2.4rem;font-weight:800;color:var(--navy-deep);line-height:1;margin:4px 0}
+.price-amount{font-size:2.1rem;font-weight:800;color:var(--navy-deep);line-height:1;margin:4px 0}
 .price-period{font-size:.82rem;color:var(--gray-400)}
 .price-save{display:inline-block;background:#e8f5e9;color:#2e7d32;font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:40px;margin:8px 0;}
 .price-divider{height:1px;background:var(--gray-100);margin:20px 0}
@@ -215,8 +234,8 @@ footer{background:var(--navy-deep);padding:48px 5% 28px;border-top:1px solid rgb
 .toast{position:fixed;bottom:24px;right:24px;z-index:3000;background:var(--navy-deep);color:var(--white);padding:14px 20px;border-radius:var(--radius-md);font-size:.88rem;display:none;align-items:center;gap:10px;box-shadow:var(--shadow-lg);animation:toastIn .3s ease;max-width:320px;}
 .toast.active{display:flex}
 @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@media(max-width:900px){.hero-inner{grid-template-columns:1fr;gap:40px}.hero-visual{display:none}.hero h1{font-size:2.2rem}.pain-grid,.solution-grid,.testi-grid,.price-grid{grid-template-columns:1fr}.footer-top{grid-template-columns:1fr;gap:28px}.demo-steps{flex-direction:column;gap:8px}.demo-arrow{transform:rotate(90deg)}}
-@media(max-width:600px){.hero{padding:56px 5% 80px;min-height:auto}.hero h1{font-size:1.85rem}.section{padding:56px 5%}.navbar{padding:0 4%}.modal-box{padding:28px 20px}}
+@media(max-width:900px){.hero-inner{grid-template-columns:1fr;gap:40px}.hero-visual{display:none}.hero h1{font-size:2.2rem}.pain-grid,.solution-grid,.testi-grid{grid-template-columns:1fr}.price-grid{grid-template-columns:repeat(2,1fr);gap:16px}.footer-top{grid-template-columns:1fr;gap:28px}.demo-steps{flex-direction:column;gap:8px}.demo-arrow{transform:rotate(90deg)}}
+@media(max-width:600px){.hero{padding:56px 5% 80px;min-height:auto}.hero h1{font-size:1.85rem}.section{padding:56px 5%}.navbar{padding:0 4%}.modal-box{padding:28px 20px}.price-grid{grid-template-columns:1fr}}
 
 /* ── TAMBAHAN CSS: SOCIAL PROOF POPUP ── */
 .social-proof-wrap {
@@ -257,12 +276,12 @@ footer{background:var(--navy-deep);padding:48px 5% 28px;border-top:1px solid rgb
   <div class="hero-inner">
     <div class="hero-content">
       <div class="hero-badge" role="note">⭐ Dipercaya 500+ Panitia Event di Indonesia</div>
-      <h1 id="hero-heading">Buat <em>500 Sertifikat</em> dalam 5 Menit, Bukan 5 Jam</h1>
-      <p class="hero-sub">Akhiri penderitaan bikin sertifikat satu per satu. CertGen Pro generate, kirim, dan selesaikan semuanya otomatis—dari import data hingga broadcast email.</p>
-      <a href="#pricing" class="btn-primary">Mulai Sekarang — Lihat Paket <span aria-hidden="true">↓</span></a>
+      <h1 id="hero-heading">Buat <em>Ratusan Sertifikat</em> dalam Hitungan Menit—Bukan Berjam-jam</h1>
+      <p class="hero-sub">Panitia webinar, HRD, dan lembaga pelatihan sudah beralih ke CertGen Pro. Generate PDF massal, kirim otomatis ke email peserta, dan selesai—semua dari satu aplikasi desktop yang ringan dan mudah dipakai.</p>
+      <a href="#pricing" class="btn-primary">Coba Sekarang — Mulai dari Rp 19.000 <span aria-hidden="true">↓</span></a>
       <div class="hero-trust" role="list">
-        <span role="listitem">Aktivasi instan via email</span>
-        <span role="listitem">Sekali bayar, pakai selamanya</span>
+        <span role="listitem">Aktivasi instan via email & WA</span>
+        <span role="listitem">Tanpa langganan wajib</span>
         <span role="listitem">Support via WhatsApp</span>
       </div>
     </div>
@@ -290,42 +309,115 @@ footer{background:var(--navy-deep);padding:48px 5% 28px;border-top:1px solid rgb
 <section class="section pain" aria-labelledby="pain-heading">
   <div class="section-inner">
     <span class="section-tag">Masalah yang Ada Sekarang</span>
-    <h2 class="section-title" id="pain-heading">Masih Begini Cara Anda Bikin Sertifikat?</h2>
+    <h2 class="section-title" id="pain-heading">Bikin Sertifikat Manual Itu Menyiksa—dan Sudah Seharusnya Berhenti</h2>
     <div class="pain-grid" role="list">
-      <div class="pain-card" role="listitem"><div class="pain-icon" aria-hidden="true">🕐</div><h3>Bikin satu per satu, berjam-jam</h3><p>Edit nama satu per satu di Canva atau Word — berjam-jam untuk 100 peserta saja. Waktu Anda terlalu berharga untuk ini.</p></div>
-      <div class="pain-card" role="listitem"><div class="pain-icon" aria-hidden="true">😰</div><h3>Rawan typo dan salah nama</h3><p>Satu salah ketik bisa memalukan di depan ratusan peserta. Manual berarti manusia, dan manusia selalu bisa salah.</p></div>
-      <div class="pain-card" role="listitem"><div class="pain-icon" aria-hidden="true">📧</div><h3>Kirim email satu per satu</h3><p>Copy-paste alamat, attach file, kirim—lakukan itu 200 kali. Melelahkan dan sama sekali tidak profesional.</p></div>
+      <div class="pain-card" role="listitem"><div class="pain-icon" aria-hidden="true">🕐</div><h3>Berjam-jam Edit Nama Satu per Satu</h3><p>Buka Canva atau Word, edit nama, export, simpan, ulangi—ratusan kali. Untuk 200 peserta saja bisa habis seharian penuh. Waktu Anda jauh lebih berharga dari itu.</p></div>
+      <div class="pain-card" role="listitem"><div class="pain-icon" aria-hidden="true">😰</div><h3>Satu Typo, Memalukan di Depan Ratusan Peserta</h3><p>Nama salah eja di sertifikat resmi adalah mimpi buruk panitia. Proses manual selalu membuka celah untuk human error yang bisa merusak reputasi acara Anda.</p></div>
+      <div class="pain-card" role="listitem"><div class="pain-icon" aria-hidden="true">📧</div><h3>Kirim Email Satu per Satu Sampai Pegal</h3><p>Copy alamat, attach file PDF, kirim—lakukan itu 300 kali berturut-turut. Melelahkan, membosankan, dan tidak profesional sama sekali.</p></div>
     </div>
-    <div class="pain-close" role="note">💡 Ada cara yang jauh lebih cepat dan profesional.</div>
+    <div class="pain-close" role="note">💡 <strong>CertGen Pro menyelesaikan ketiga masalah ini sekaligus</strong>—dalam hitungan menit, bukan jam.</div>
   </div>
 </section>
 
-<!-- SOLUTION -->
+<!-- SOLUTION / FITUR -->
 <section class="section" aria-labelledby="solution-heading">
   <div class="section-inner">
-    <span class="section-tag">Solusi CertGen Pro</span>
-    <h2 class="section-title" id="solution-heading">Satu Klik, Ratusan Sertifikat Siap Kirim</h2>
-    <p class="section-sub">Dirancang khusus untuk panitia event, HRD, dan lembaga pelatihan Indonesia.</p>
-    <div class="solution-grid" role="list">
-      <div class="solution-card" role="listitem"><div class="solution-icon-wrap" aria-hidden="true">📥</div><h3>Import Data</h3><p>Upload CSV data peserta, semua nama langsung masuk otomatis tanpa ketik satu pun.</p></div>
-      <div class="solution-card" role="listitem"><div class="solution-icon-wrap" aria-hidden="true">🎨</div><h3>Template Profesional</h3><p>Pilih dari galeri template cantik atau upload desain Anda sendiri dengan mudah.</p></div>
-      <div class="solution-card" role="listitem"><div class="solution-icon-wrap" aria-hidden="true">⚡</div><h3>Generate Massal</h3><p>Klik satu tombol, ratusan PDF tersimpan rapi dalam hitungan menit—bukan jam.</p></div>
-      <div class="solution-card" role="listitem"><div class="solution-icon-wrap" aria-hidden="true">📨</div><h3>Email Broadcast</h3><p>Kirim sertifikat langsung ke email semua peserta dari dalam aplikasi sekaligus.</p></div>
+    <span class="section-tag">Fitur Lengkap CertGen Pro</span>
+    <h2 class="section-title" id="solution-heading">Semua yang Anda Butuhkan, dalam Satu Aplikasi</h2>
+    <p class="section-sub">Dirancang khusus untuk panitia event, HRD, dan lembaga pelatihan Indonesia yang menghargai waktu dan profesionalisme.</p>
+    <div class="solution-grid" role="list" style="grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px">
+      <div class="solution-card" role="listitem"><div class="solution-icon-wrap" aria-hidden="true">⚡</div><h3>Generate Massal Super Cepat</h3><p>Ratusan sertifikat PDF tergenerate dalam hitungan detik—bukan jam. Import data CSV, satu klik, selesai.</p></div>
+      <div class="solution-card" role="listitem"><div class="solution-icon-wrap" aria-hidden="true">📁</div><h3>Nama File Sesuai Nama Penerima</h3><p>Setiap file PDF otomatis dinamai sesuai nama peserta. Rapi, terorganisir, dan mudah ditemukan.</p></div>
+      <div class="solution-card" role="listitem"><div class="solution-icon-wrap" aria-hidden="true">📨</div><h3>Kirim Email ke Semua Peserta</h3><p>Broadcast sertifikat langsung dari aplikasi ke email masing-masing peserta. Atur nama pengirim, judul, dan isi email sesuai kebutuhan.</p></div>
+      <div class="solution-card" role="listitem"><div class="solution-icon-wrap" aria-hidden="true">🎨</div><h3>Template Profesional Siap Pakai</h3><p>Koleksi template sertifikat premium yang bisa langsung digunakan. Tambah, edit, rename, dan hapus template sesuai kebutuhan.</p></div>
+      <div class="solution-card" role="listitem"><div class="solution-icon-wrap" aria-hidden="true">✏️</div><h3>Template Editable & Customizable</h3><p>Semua template bisa dikustomisasi penuh. Sesuaikan desain, warna, dan tata letak sesuai identitas acara Anda.</p></div>
+      <div class="solution-card" role="listitem"><div class="solution-icon-wrap" aria-hidden="true">🔄</div><h3>Backup & Restore Template</h3><p>Simpan semua template dan konfigurasinya. Restore ratusan nama peserta cukup satu klik—tidak perlu input ulang.</p></div>
+      <div class="solution-card" role="listitem"><div class="solution-icon-wrap" aria-hidden="true">🤖</div><h3>Prompt AI Buat CSV Peserta</h3><p>Fitur unik: salin prompt AI bawaan aplikasi, tempel ke ChatGPT atau Claude, dan file CSV peserta siap dalam sekejap.</p></div>
+      <div class="solution-card" role="listitem"><div class="solution-icon-wrap" aria-hidden="true">👥</div><h3>Restore Peserta Satu Klik</h3><p>Pernah mengadakan event serupa? Restore ratusan nama peserta dari event sebelumnya hanya dengan satu klik.</p></div>
+      <div class="solution-card" role="listitem"><div class="solution-icon-wrap" aria-hidden="true">💻</div><h3>Aplikasi Desktop Ringan</h3><p>Berjalan langsung di Windows, tanpa internet saat generate. Cepat, stabil, dan tidak memakan banyak resource.</p></div>
     </div>
   </div>
 </section>
 
-<!-- DEMO -->
+<!-- DEMO / CAROUSEL SCREENSHOT -->
 <section class="section demo" aria-labelledby="demo-heading">
   <div class="section-inner">
     <span class="section-tag">Demo Aplikasi</span>
-    <h2 class="section-title" id="demo-heading">Lihat Betapa Mudahnya</h2>
-    <p class="section-sub">Tampilan nyata aplikasi CertGen Pro v3.0 — bersih, cepat, dan mudah digunakan siapa saja.</p>
-    <div class="demo-frame" role="img" aria-label="Screenshot aplikasi CertGen Pro">
-      <div class="demo-bar"><div class="demo-dots"><div class="demo-dot dd-r"></div><div class="demo-dot dd-y"></div><div class="demo-dot dd-g"></div></div><span class="demo-title">CertGen Pro By ImagineStudio — v3.0 Professional</span></div>
-      <div class="demo-screen"><div class="demo-img-placeholder"><div class="demo-icon">🖼️</div><p>Screenshot Aplikasi CertGen Pro</p><small>Tampilan aplikasi CertGen Pro v3.0</small></div></div>
+    <h2 class="section-title" id="demo-heading">Lihat Betapa Mudahnya CertGen Pro</h2>
+    <p class="section-sub">Tampilan nyata aplikasi CertGen Pro v3.0 — bersih, cepat, dan mudah digunakan siapa saja tanpa keahlian teknis.</p>
+
+    <div class="carousel-wrap" role="region" aria-label="Screenshot aplikasi CertGen Pro">
+      <div class="carousel-bar">
+        <div class="demo-dots"><div class="demo-dot dd-r"></div><div class="demo-dot dd-y"></div><div class="demo-dot dd-g"></div></div>
+        <span class="demo-title">CertGen Pro By ImagineStudio — v3.0 Professional</span>
+      </div>
+      <div class="carousel-track-outer">
+        <div class="carousel-track" id="carouselTrack">
+          <!-- Slide 1 -->
+          <div class="carousel-slide">
+            <div class="carousel-slide-inner">
+              <div class="demo-icon">📋</div>
+              <p>Dashboard Utama — Import & Kelola Peserta</p>
+              <small>Tampilkan screenshot dashboard aplikasi di sini</small>
+            </div>
+          </div>
+          <!-- Slide 2 -->
+          <div class="carousel-slide">
+            <div class="carousel-slide-inner">
+              <div class="demo-icon">🎨</div>
+              <p>Galeri Template Sertifikat Profesional</p>
+              <small>Tampilkan screenshot halaman pilih template di sini</small>
+            </div>
+          </div>
+          <!-- Slide 3 -->
+          <div class="carousel-slide">
+            <div class="carousel-slide-inner">
+              <div class="demo-icon">⚡</div>
+              <p>Proses Generate PDF Massal Real-time</p>
+              <small>Tampilkan screenshot progress generate di sini</small>
+            </div>
+          </div>
+          <!-- Slide 4 -->
+          <div class="carousel-slide">
+            <div class="carousel-slide-inner">
+              <div class="demo-icon">📧</div>
+              <p>Pengaturan Email Broadcast ke Peserta</p>
+              <small>Tampilkan screenshot fitur kirim email di sini</small>
+            </div>
+          </div>
+          <!-- Slide 5 -->
+          <div class="carousel-slide">
+            <div class="carousel-slide-inner">
+              <div class="demo-icon">🤖</div>
+              <p>Fitur Prompt AI untuk Buat CSV Peserta</p>
+              <small>Tampilkan screenshot fitur AI prompt di sini</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="carousel-nav">
+        <button class="carousel-btn" onclick="carouselPrev()" aria-label="Slide sebelumnya">‹</button>
+        <div class="carousel-dots" id="carouselDots">
+          <div class="carousel-dot active" onclick="carouselGoTo(0)"></div>
+          <div class="carousel-dot" onclick="carouselGoTo(1)"></div>
+          <div class="carousel-dot" onclick="carouselGoTo(2)"></div>
+          <div class="carousel-dot" onclick="carouselGoTo(3)"></div>
+          <div class="carousel-dot" onclick="carouselGoTo(4)"></div>
+        </div>
+        <button class="carousel-btn" onclick="carouselNext()" aria-label="Slide berikutnya">›</button>
+        <span class="carousel-caption" id="carouselCaption">1 / 5</span>
+      </div>
     </div>
-    <div class="demo-steps" role="list" aria-label="Langkah menggunakan CertGen Pro"><div class="demo-step" role="listitem">1️⃣ Import CSV</div><div class="demo-arrow" aria-hidden="true">→</div><div class="demo-step" role="listitem">2️⃣ Pilih Template</div><div class="demo-arrow" aria-hidden="true">→</div><div class="demo-step" role="listitem">3️⃣ Generate &amp; Kirim</div></div>
+
+    <div class="demo-steps" role="list" aria-label="Langkah menggunakan CertGen Pro">
+      <div class="demo-step" role="listitem">1️⃣ Import CSV Peserta</div>
+      <div class="demo-arrow" aria-hidden="true">→</div>
+      <div class="demo-step" role="listitem">2️⃣ Pilih Template</div>
+      <div class="demo-arrow" aria-hidden="true">→</div>
+      <div class="demo-step" role="listitem">3️⃣ Generate Massal</div>
+      <div class="demo-arrow" aria-hidden="true">→</div>
+      <div class="demo-step" role="listitem">4️⃣ Kirim ke Email Peserta ✅</div>
+    </div>
   </div>
 </section>
 
@@ -348,14 +440,85 @@ footer{background:var(--navy-deep);padding:48px 5% 28px;border-top:1px solid rgb
     <div class="price-header">
       <span class="section-tag">Harga & Paket</span>
       <h2 class="section-title" id="pricing-heading">Pilih Paket yang Sesuai Kebutuhan Anda</h2>
-      <p class="section-sub">Tidak ada biaya tersembunyi. Bayar sekali, langsung aktif dalam 1–2 menit.</p>
+      <p class="section-sub">Tidak ada biaya tersembunyi. Bayar sekali, lisensi langsung aktif dalam 1–2 menit via email & WhatsApp.</p>
     </div>
     <div class="price-grid">
-      <div class="price-card"><div class="price-badge silver">Untuk Event Sesekali</div><h3>Paket Bulanan</h3><p class="price-desc">30 hari akses penuh</p><div class="price-amount">Rp&nbsp;79.000</div><div class="price-period">per bulan</div><div class="price-divider"></div><ul class="price-features" aria-label="Fitur paket bulanan"><li>Generate sertifikat tak terbatas</li><li>Semua template tersedia</li><li>Update gratis selama masa aktif</li><li>Support via email</li></ul><button class="btn-buy" onclick="openModal('Paket Bulanan','Rp 79.000',79000)">Pilih Bulanan</button></div>
-      <div class="price-card featured"><div class="price-badge gold">⭐ PALING POPULER</div><h3>Paket Tahunan</h3><p class="price-desc">365 hari akses penuh</p><div class="price-old">Rp 948.000</div><div class="price-amount">Rp&nbsp;299.000</div><div class="price-period">per tahun</div><div class="price-save">Hemat 68%</div><div class="price-divider"></div><ul class="price-features" aria-label="Fitur paket tahunan"><li>Semua fitur Bulanan</li><li>Prioritas support</li><li>Template eksklusif</li><li>Update gratis selama masa aktif</li></ul><button class="btn-buy gold-btn" onclick="openModal('Paket Tahunan','Rp 299.000',299000)">Pilih Tahunan — Hemat 68%</button></div>
-      <div class="price-card"><div class="price-badge">🏆 Investasi Terbaik</div><h3>Paket Lifetime</h3><p class="price-desc">Bayar sekali, pakai selamanya</p><div class="price-amount">Rp&nbsp;599.000</div><div class="price-period">satu kali bayar</div><div class="price-divider"></div><ul class="price-features" aria-label="Fitur paket lifetime"><li>Semua fitur Tahunan</li><li>Akses fitur baru selamanya</li><li>Update seumur hidup</li><li>Prioritas support tertinggi</li></ul><button class="btn-buy primary" onclick="openModal('Paket Lifetime','Rp 599.000',599000)">Pilih Lifetime</button></div>
+
+      <!-- HARIAN -->
+      <div class="price-card">
+        <div class="price-badge silver">Coba Dulu</div>
+        <h3>Paket Harian</h3>
+        <p class="price-desc">Akses penuh 1 hari</p>
+        <div class="price-amount">Rp&nbsp;19.000</div>
+        <div class="price-period">per hari</div>
+        <div class="price-divider"></div>
+        <ul class="price-features" aria-label="Fitur paket harian">
+          <li>Generate sertifikat tak terbatas</li>
+          <li>Semua template tersedia</li>
+          <li>Kirim email ke peserta</li>
+          <li>Support via WhatsApp</li>
+        </ul>
+        <button class="btn-buy" onclick="openModal('Paket Harian','Rp 19.000',19000)">Pilih Harian</button>
+      </div>
+
+      <!-- BULANAN -->
+      <div class="price-card">
+        <div class="price-badge silver">Event Rutin</div>
+        <h3>Paket Bulanan</h3>
+        <p class="price-desc">Akses penuh 30 hari</p>
+        <div class="price-amount">Rp&nbsp;49.000</div>
+        <div class="price-period">per bulan</div>
+        <div class="price-divider"></div>
+        <ul class="price-features" aria-label="Fitur paket bulanan">
+          <li>Generate sertifikat tak terbatas</li>
+          <li>Semua template tersedia</li>
+          <li>Kirim email ke peserta</li>
+          <li>Update gratis masa aktif</li>
+          <li>Support via WhatsApp</li>
+        </ul>
+        <button class="btn-buy" onclick="openModal('Paket Bulanan','Rp 49.000',49000)">Pilih Bulanan</button>
+      </div>
+
+      <!-- TAHUNAN -->
+      <div class="price-card featured">
+        <div class="price-badge gold">⭐ PALING POPULER</div>
+        <h3>Paket Tahunan</h3>
+        <p class="price-desc">Akses penuh 365 hari</p>
+        <div class="price-old">Rp 588.000</div>
+        <div class="price-amount">Rp&nbsp;99.000</div>
+        <div class="price-period">per tahun</div>
+        <div class="price-save">Hemat 83%</div>
+        <div class="price-divider"></div>
+        <ul class="price-features" aria-label="Fitur paket tahunan">
+          <li>Semua fitur Bulanan</li>
+          <li>Template eksklusif premium</li>
+          <li>Prioritas support</li>
+          <li>Update gratis masa aktif</li>
+          <li>Backup & restore template</li>
+        </ul>
+        <button class="btn-buy gold-btn" onclick="openModal('Paket Tahunan','Rp 99.000',99000)">Pilih Tahunan — Hemat 83%</button>
+      </div>
+
+      <!-- LIFETIME -->
+      <div class="price-card">
+        <div class="price-badge">🏆 Investasi Terbaik</div>
+        <h3>Paket Lifetime</h3>
+        <p class="price-desc">Bayar sekali, pakai selamanya</p>
+        <div class="price-amount">Rp&nbsp;299.000</div>
+        <div class="price-period">satu kali bayar</div>
+        <div class="price-divider"></div>
+        <ul class="price-features" aria-label="Fitur paket lifetime">
+          <li>Semua fitur Tahunan</li>
+          <li>Update & fitur baru selamanya</li>
+          <li>Prioritas support tertinggi</li>
+          <li>Tidak ada biaya perpanjangan</li>
+          <li>Akses fitur eksklusif masa depan</li>
+        </ul>
+        <button class="btn-buy primary" onclick="openModal('Paket Lifetime','Rp 299.000',299000)">Pilih Lifetime</button>
+      </div>
+
     </div>
-    <div class="price-trust" role="note" aria-label="Informasi keamanan pembayaran"><span>🔒 Pembayaran aman via Midtrans</span><span>📧 Lisensi dikirim otomatis ke email</span><span>⚡ Aktivasi dalam 1–2 menit</span></div>
+    <div class="price-trust" role="note" aria-label="Informasi keamanan pembayaran"><span>🔒 Pembayaran aman via Midtrans</span><span>📧 Lisensi dikirim otomatis ke email & WA</span><span>⚡ Aktivasi dalam 1–2 menit</span></div>
   </div>
 </section>
 
@@ -367,7 +530,7 @@ footer{background:var(--navy-deep);padding:48px 5% 28px;border-top:1px solid rgb
     <div class="faq-list" role="list">
       <div class="faq-item" role="listitem"><div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="toggleFaq(this)"><span>Bagaimana cara mengaktifkan lisensi?</span><div class="faq-icon" aria-hidden="true">+</div></div><div class="faq-answer" role="region">Setelah pembayaran berhasil, license key dikirim otomatis ke email Anda dalam 1–2 menit. Buka aplikasi CertGen Pro, klik "Aktivasi Lisensi", masukkan key tersebut. Selesai!</div></div>
       <div class="faq-item" role="listitem"><div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="toggleFaq(this)"><span>Berapa PC yang bisa saya install?</span><div class="faq-icon" aria-hidden="true">+</div></div><div class="faq-answer" role="region">Satu lisensi untuk satu PC. Jika ingin pindah PC, hubungi support kami via WhatsApp dan kami akan bantu proses transfernya.</div></div>
-      <div class="faq-item" role="listitem"><div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="toggleFaq(this)"><span>Apakah ada uji coba gratis?</span><div class="faq-icon" aria-hidden="true">+</div></div><div class="faq-answer" role="region">Untuk saat ini belum tersedia versi gratis. Namun Anda bisa mulai dengan paket Harian di halaman perpanjangan lisensi seharga Rp 19.000 untuk mencoba fitur lengkapnya.</div></div>
+      <div class="faq-item" role="listitem"><div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="toggleFaq(this)"><span>Apakah ada uji coba gratis?</span><div class="faq-icon" aria-hidden="true">+</div></div><div class="faq-answer" role="region">Belum ada versi gratis, namun Anda bisa mencoba semua fitur lengkap dengan <strong>Paket Harian hanya Rp 19.000</strong>. Sangat terjangkau untuk membuktikan sendiri seberapa cepat CertGen Pro bekerja.</div></div>
       <div class="faq-item" role="listitem"><div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="toggleFaq(this)"><span>Apakah ada update gratis?</span><div class="faq-icon" aria-hidden="true">+</div></div><div class="faq-answer" role="region">Ya! Semua paket mendapatkan update gratis selama masa aktif. Paket Lifetime mendapat update dan fitur baru selamanya tanpa biaya tambahan.</div></div>
       <div class="faq-item" role="listitem"><div class="faq-question" role="button" tabindex="0" aria-expanded="false" onclick="toggleFaq(this)"><span>Bagaimana jika saya tidak menerima email lisensi?</span><div class="faq-icon" aria-hidden="true">+</div></div><div class="faq-answer" role="region">Cek folder spam/junk terlebih dahulu. Jika tidak ada, hubungi support kami via WhatsApp dan kami akan bantu dalam hitungan menit.</div></div>
     </div>
@@ -377,10 +540,10 @@ footer{background:var(--navy-deep);padding:48px 5% 28px;border-top:1px solid rgb
 <!-- CTA FINAL -->
 <section class="section cta-final" aria-labelledby="cta-heading">
   <div class="cta-inner">
-    <h2 class="section-title" id="cta-heading">Siap Menghemat Puluhan Jam Kerja?</h2>
-    <p class="cta-sub">Bergabung dengan 500+ panitia event yang sudah beralih ke CertGen Pro dan tidak pernah mau kembali ke cara lama.</p>
-    <a href="#pricing" class="btn-primary" style="font-size:1.05rem;padding:18px 40px;">Dapatkan Akses Sekarang ↓</a>
-    <div class="cta-social"><span>✅ Aktivasi instan</span><span>🔒 Pembayaran aman</span><span>💬 Support WhatsApp</span></div>
+    <h2 class="section-title" id="cta-heading">Sudah Saatnya Berhenti Buang Waktu untuk Hal yang Bisa Diotomasi</h2>
+    <p class="cta-sub">Bergabung dengan 500+ panitia event, HRD, dan lembaga pelatihan yang sudah beralih ke CertGen Pro—dan tidak pernah mau kembali ke cara lama.</p>
+    <a href="#pricing" class="btn-primary" style="font-size:1.05rem;padding:18px 40px;">Dapatkan Akses Sekarang — Mulai Rp 19.000 ↓</a>
+    <div class="cta-social"><span>✅ Aktivasi instan</span><span>🔒 Pembayaran aman Midtrans</span><span>💬 Support WhatsApp</span><span>📧 Lisensi via email & WA</span></div>
   </div>
 </section>
 
@@ -604,6 +767,23 @@ function showNextSale() {
     setTimeout(showNextSale, 15000);
   }, 6000);
 }
+
+// ── CAROUSEL ──
+var carouselIndex = 0;
+var carouselTotal = 5;
+var carouselTimer = null;
+
+function carouselGoTo(idx) {
+  carouselIndex = idx;
+  document.getElementById('carouselTrack').style.transform = 'translateX(-' + (idx * 100) + '%)';
+  document.querySelectorAll('.carousel-dot').forEach(function(d, i) { d.classList.toggle('active', i === idx); });
+  document.getElementById('carouselCaption').textContent = (idx + 1) + ' / ' + carouselTotal;
+  clearTimeout(carouselTimer);
+  carouselTimer = setTimeout(carouselNext, 4500);
+}
+function carouselNext() { carouselGoTo((carouselIndex + 1) % carouselTotal); }
+function carouselPrev() { carouselGoTo((carouselIndex - 1 + carouselTotal) % carouselTotal); }
+carouselTimer = setTimeout(carouselNext, 4500);
 
 window.addEventListener('DOMContentLoaded', fetchRecentSales);
 </script>
