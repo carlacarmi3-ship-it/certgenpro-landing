@@ -17,9 +17,9 @@ const snap = new midtransClient.Snap({
 // Daftar harga resmi (Server-side validation)
 const PRICELIST = {
   'paket harian':   19000,
-  'paket bulanan':  49000,   // Diubah dari 79000 menjadi 49000
-  'paket tahunan':  99000,   // Diubah dari 299000 menjadi 99000
-  'paket lifetime': 299000   // Diubah dari 599000 menjadi 299000
+  'paket bulanan':  49000,
+  'paket tahunan':  99000,
+  'paket lifetime': 299000
 };
 
 module.exports = async function handler(req, res) {
@@ -32,7 +32,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
 
   try {
-    // ✅ Menangkap kota dari req.body (opsional, jika diblock adblock akan kosong)
+    // Menangkap kota dari req.body (opsional, jika diblock adblock akan kosong)
     const { name, email, whatsapp, paket, kota } = req.body;
 
     if (!name || !email || !whatsapp || !paket) {
@@ -50,21 +50,33 @@ module.exports = async function handler(req, res) {
     const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
     const orderId = `CGP-${timestamp}-${randomStr}`;
 
+    // ✅ Ambil base URL dari host header (otomatis sesuai domain production/preview)
+    const baseUrl = `https://${req.headers.host}`;
+
     const parameter = {
       transaction_details: { order_id: orderId, gross_amount: expectedPrice },
       customer_details: { first_name: name, email: email, phone: whatsapp },
       item_details: [{
-        id: paketKey.replace(/\s/g, '_'), price: expectedPrice, quantity: 1, name: `Lisensi CertGen Pro - ${paket}`
+        id: paketKey.replace(/\s/g, '_'),
+        price: expectedPrice,
+        quantity: 1,
+        name: `Lisensi CertGen Pro - ${paket}`
       }],
       custom_field1: name,
       custom_field2: email,
-      // ✅ Menyisipkan KOTA ke JSON bersama WA & Paket untuk webhook
+      // Menyisipkan KOTA ke JSON bersama WA & Paket untuk webhook
       custom_field3: JSON.stringify({ wa: whatsapp, paket: paket, kota: kota || "" }),
+
       callbacks: {
-        finish: `https://${req.headers.host}/thank-you.html?order=${orderId}`,
-        error: `https://${req.headers.host}/renew.html?error=1`,
-        pending: `https://${req.headers.host}/thank-you.html?pending=1`
-      }
+        finish:  `${baseUrl}/thank-you.html?order=${orderId}`,
+        // ✅ Diperbaiki: diarahkan ke payment-status.html (bukan renew.html)
+        error:   `${baseUrl}/payment-status.html?status=error&order_id=${orderId}`,
+        pending: `${baseUrl}/thank-you.html?pending=1&order=${orderId}`
+      },
+
+      // ✅ WAJIB untuk Production: eksplisit kirim webhook URL di setiap transaksi
+      // karena menu "Integrations" tidak tersedia di mode Production Midtrans
+      notification_url: `${baseUrl}/api/midtrans-webhook`
     };
 
     const transaction = await snap.createTransaction(parameter);
