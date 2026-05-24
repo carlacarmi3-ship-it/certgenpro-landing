@@ -17,9 +17,9 @@ const snap = new midtransClient.Snap({
 // Daftar harga resmi (Server-side validation)
 const PRICELIST = {
   'paket harian':   19000,
-  'paket bulanan':  79000,
-  'paket tahunan':  299000,
-  'paket lifetime': 599000
+  'paket bulanan':  49000,   // Diubah dari 79000 menjadi 49000
+  'paket tahunan':  99000,   // Diubah dari 299000 menjadi 99000
+  'paket lifetime': 299000   // Diubah dari 599000 menjadi 299000
 };
 
 module.exports = async function handler(req, res) {
