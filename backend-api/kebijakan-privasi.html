@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kebijakan Privasi — CertGen Pro</title>
+<meta name="description" content="Kebijakan Privasi CertGen Pro oleh ImagineStudio. Pelajari bagaimana kami mengumpulkan, menggunakan, dan melindungi data pribadi Anda.">
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --navy:#0d1b4b;
+  --navy-deep:#070e2e;
+  --navy-mid:#1a237e;
+  --navy-light:#283593;
+  --gold:#f9a825;
+  --gold-light:#ffd54f;
+  --gold-dark:#f57f17;
+  --cream:#fffbf0;
+  --cream-2:#fef9e7;
+  --white:#ffffff;
+  --gray-50:#f8f9fc;
+  --gray-100:#eef0f6;
+  --gray-200:#d8dce8;
+  --gray-400:#8892b0;
+  --gray-600:#4a5568;
+  --gray-800:#1a202c;
+  --green:#00c853;
+  --radius-sm:8px;
+  --radius-md:12px;
+  --radius-lg:20px;
+  --radius-xl:28px;
+  --shadow-sm:0 2px 8px rgba(13,27,75,.08);
+  --shadow-md:0 8px 32px rgba(13,27,75,.14);
+  --font-head:'DM Serif Display',serif;
+  --font-body:'Plus Jakarta Sans',sans-serif;
+}
+
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);color:var(--gray-800);background:var(--gray-50);line-height:1.6;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column;}
+
+/* ── NAVBAR ── */
+.navbar{position:sticky;top:0;z-index:1000;background:rgba(7,14,46,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid rgba(249,168,37,.15);padding:0 5%;display:flex;align-items:center;justify-content:space-between;height:68px;}
+.navbar-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.logo-icon{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--gold) 0%,var(--gold-dark) 100%);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--navy-deep);font-family:var(--font-body);flex-shrink:0;}
+.logo-text{font-size:1.15rem;font-weight:700;color:var(--white);letter-spacing:-.02em}
+.logo-text span{color:var(--gold)}
+.btn-back{display:flex;align-items:center;gap:6px;color:rgba(255,255,255,.6);font-size:.85rem;font-weight:500;text-decoration:none;padding:8px 14px;border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,.1);transition:all .2s;}
+.btn-back:hover{color:var(--white);border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.05)}
+
+/* ── PAGE HEADER ── */
+.page-header{background:linear-gradient(150deg,var(--navy-deep) 0%,var(--navy-mid) 60%,#1565c0 100%);padding:56px 5% 72px;text-align:center;position:relative;overflow:hidden;}
+.page-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 80% at 50% 0%,rgba(249,168,37,.07),transparent 70%);pointer-events:none;}
+.page-header::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:60px;background:var(--gray-50);clip-path:ellipse(55% 100% at 50% 100%);}
+.page-header-inner{position:relative;z-index:1;max-width:680px;margin:0 auto}
+.header-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(249,168,37,.12);border:1px solid rgba(249,168,37,.28);color:var(--gold-light);padding:6px 16px;border-radius:40px;font-size:.8rem;font-weight:600;margin-bottom:18px;}
+.page-header h1{font-family:var(--font-head);font-size:2.4rem;line-height:1.15;color:var(--white);margin-bottom:12px;}
+.page-header p{font-size:.95rem;color:rgba(255,255,255,.65)}
+
+/* ── MAIN ── */
+main{flex:1;padding:48px 5% 72px}
+.main-inner{max-width:780px;margin:0 auto}
+
+/* ── TOC ── */
+.toc{background:var(--cream-2);border:1px solid rgba(249,168,37,.25);border-radius:var(--radius-md);padding:24px 28px;margin-bottom:40px;}
+.toc-title{font-size:.85rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;}
+.toc ol{padding-left:18px;display:flex;flex-direction:column;gap:7px;}
+.toc ol li a{font-size:.88rem;color:var(--navy-mid);text-decoration:none;font-weight:500;transition:color .2s;}
+.toc ol li a:hover{color:var(--gold-dark)}
+
+/* ── CONTENT ── */
+.content-card{background:var(--white);border:1px solid var(--gray-100);border-radius:var(--radius-lg);padding:40px 48px;box-shadow:var(--shadow-sm);}
+.update-note{display:flex;align-items:center;gap:10px;background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:36px;font-size:.83rem;color:var(--gray-600);}
+
+.section-block{margin-bottom:40px;padding-bottom:40px;border-bottom:1px solid var(--gray-100);}
+.section-block:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
+.section-block h2{font-family:var(--font-head);font-size:1.4rem;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.section-block h2 .sec-num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--navy-mid),var(--navy-deep));color:var(--white);font-size:.8rem;font-weight:800;font-family:var(--font-body);flex-shrink:0;}
+.section-block p{font-size:.92rem;color:var(--gray-600);line-height:1.8;margin-bottom:12px;}
+.section-block p:last-child{margin-bottom:0}
+.section-block ul{padding-left:0;list-style:none;display:flex;flex-direction:column;gap:8px;margin:12px 0;}
+.section-block ul li{font-size:.92rem;color:var(--gray-600);line-height:1.7;display:flex;align-items:flex-start;gap:9px;}
+.section-block ul li::before{content:'✓';color:var(--green);font-weight:800;flex-shrink:0;margin-top:2px;}
+
+/* ── CONTACT BOX ── */
+.contact-box{background:linear-gradient(135deg,var(--navy-deep),var(--navy-mid));border-radius:var(--radius-lg);padding:32px 40px;text-align:center;margin-top:40px;}
+.contact-box h3{font-family:var(--font-head);font-size:1.4rem;color:var(--white);margin-bottom:8px;}
+.contact-box p{font-size:.9rem;color:rgba(255,255,255,.7);margin-bottom:20px;}
+.contact-links{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;}
+.contact-link{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:var(--radius-sm);font-size:.88rem;font-weight:600;font-family:var(--font-body);text-decoration:none;transition:all .2s;}
+.contact-link.email{background:rgba(255,255,255,.1);color:var(--white);border:1px solid rgba(255,255,255,.2);}
+.contact-link.email:hover{background:rgba(255,255,255,.18)}
+.contact-link.wa{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:var(--navy-deep);}
+.contact-link.wa:hover{box-shadow:0 6px 20px rgba(249,168,37,.4);transform:translateY(-1px)}
+
+/* ── FOOTER ── */
+footer{background:var(--navy-deep);padding:36px 5% 24px;border-top:1px solid rgba(255,255,255,.06);}
+.footer-inner{max-width:780px;margin:0 auto;text-align:center;}
+.footer-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-bottom:16px;}
+.footer-links-row{display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:16px;}
+.footer-links-row a{font-size:.82rem;color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s;}
+.footer-links-row a:hover{color:var(--gold)}
+.footer-links-row a.active{color:var(--gold-light);font-weight:600;}
+.footer-copy{font-size:.78rem;color:rgba(255,255,255,.3)}
+
+@media(max-width:700px){
+  .page-header h1{font-size:1.85rem}
+  .content-card{padding:28px 22px}
+  .contact-box{padding:24px 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" role="navigation" aria-label="Menu utama">
+  <a href="/" class="navbar-logo" aria-label="CertGen Pro - Halaman Utama">
+    <div class="logo-icon" aria-hidden="true">C</div>
+    <span class="logo-text">CertGen <span>Pro</span></span>
+  </a>
+  <a href="/" class="btn-back">← Kembali ke Beranda</a>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="header-badge">🔒 Privasi & Keamanan Data</div>
+    <h1>Kebijakan Privasi</h1>
+    <p>Kami berkomitmen untuk melindungi dan menghormati privasi data pribadi Anda.</p>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main>
+  <div class="main-inner">
+
+    <!-- TABLE OF CONTENTS -->
+    <nav class="toc" aria-label="Daftar isi">
+      <div class="toc-title">Daftar Isi</div>
+      <ol>
+        <li><a href="#s1">Data yang Kami Kumpulkan</a></li>
+        <li><a href="#s2">Cara Kami Menggunakan Data</a></li>
+        <li><a href="#s3">Penyimpanan & Keamanan Data</a></li>
+        <li><a href="#s4">Berbagi Data dengan Pihak Ketiga</a></li>
+        <li><a href="#s5">Cookie & Teknologi Pelacakan</a></li>
+        <li><a href="#s6">Hak-Hak Pengguna</a></li>
+        <li><a href="#s7">Data Anak-Anak</a></li>
+        <li><a href="#s8">Perubahan Kebijakan Privasi</a></li>
+        <li><a href="#s9">Hubungi Kami</a></li>
+      </ol>
+    </nav>
+
+    <!-- CONTENT -->
+    <div class="content-card">
+
+      <div class="update-note" role="note">
+        📅 <span>Terakhir diperbarui: <strong>1 Januari 2025</strong> &nbsp;·&nbsp; Berlaku untuk semua pengguna CertGen Pro</span>
+      </div>
+
+      <p style="font-size:.93rem;color:var(--gray-600);line-height:1.85;margin-bottom:36px;">
+        Kebijakan Privasi ini menjelaskan bagaimana <strong>ImagineStudio</strong> ("kami", "milik kami") mengumpulkan, menggunakan, menyimpan, dan melindungi informasi pribadi Anda saat menggunakan layanan dan produk CertGen Pro ("Layanan"). Dengan menggunakan Layanan kami, Anda menyetujui praktik yang dijelaskan dalam kebijakan ini.
+      </p>
+
+      <!-- 1 -->
+      <div class="section-block" id="s1">
+        <h2><span class="sec-num">1</span>Data yang Kami Kumpulkan</h2>
+        <p>Kami mengumpulkan beberapa jenis informasi untuk menyediakan dan meningkatkan Layanan kami kepada Anda:</p>
+        <ul>
+          <li><strong>Data Identitas:</strong> Nama lengkap yang Anda berikan saat melakukan pembelian atau aktivasi lisensi.</li>
+          <li><strong>Data Kontak:</strong> Alamat email dan nomor WhatsApp yang digunakan untuk pengiriman lisensi dan komunikasi support.</li>
+          <li><strong>Data Transaksi:</strong> Informasi terkait paket yang dibeli, jumlah pembayaran, dan tanggal transaksi. Data kartu/rekening tidak kami simpan—diproses langsung oleh Midtrans.</li>
+          <li><strong>Data Teknis:</strong> Alamat IP, jenis perangkat, dan informasi sistem operasi yang dikumpulkan secara otomatis untuk keperluan aktivasi lisensi dan deteksi penipuan.</li>
+          <li><strong>Data Penggunaan:</strong> Informasi tentang bagaimana Anda berinteraksi dengan website kami, termasuk halaman yang dikunjungi dan waktu kunjungan.</li>
+        </ul>
+        <p>Kami <strong>tidak</strong> mengumpulkan data sensitif seperti data keuangan, data kesehatan, atau informasi kartu kredit secara langsung.</p>
+      </div>
+
+      <!-- 2 -->
+      <div class="section-block" id="s2">
+        <h2><span class="sec-num">2</span>Cara Kami Menggunakan Data</h2>
+        <p>Data yang kami kumpulkan digunakan untuk tujuan berikut:</p>
+        <ul>
+          <li>Memproses pembelian dan mengirimkan lisensi aktivasi ke email dan WhatsApp Anda.</li>
+          <li>Mengaktifkan dan memverifikasi lisensi aplikasi CertGen Pro.</li>
+          <li>Memberikan bantuan teknis dan layanan pelanggan via WhatsApp.</li>
+          <li>Mengirimkan notifikasi penting terkait lisensi Anda, termasuk pengingat masa aktif yang hampir berakhir.</li>
+          <li>Mendeteksi dan mencegah aktivitas penipuan atau penyalahgunaan lisensi.</li>
+          <li>Meningkatkan kualitas produk dan layanan berdasarkan pola penggunaan secara agregat dan anonim.</li>
+        </ul>
+        <p>Kami <strong>tidak</strong> menggunakan data Anda untuk keperluan iklan pihak ketiga atau menjual data Anda kepada pihak manapun.</p>
+      </div>
+
+      <!-- 3 -->
+      <div class="section-block" id="s3">
+        <h2><span class="sec-num">3</span>Penyimpanan & Keamanan Data</h2>
+        <p>Keamanan data Anda adalah prioritas utama kami. Langkah-langkah keamanan yang kami terapkan meliputi:</p>
+        <ul>
+          <li>Enkripsi data saat transmisi menggunakan protokol HTTPS/TLS.</li>
+          <li>Penyimpanan data pada server yang aman dengan akses terbatas hanya untuk personel yang berwenang.</li>
+          <li>Tidak menyimpan informasi kartu pembayaran — seluruh transaksi diproses oleh Midtrans yang terdaftar dan diawasi oleh Bank Indonesia.</li>
+        </ul>
+        <p>Data pribadi Anda disimpan selama akun atau lisensi Anda aktif, dan paling lama <strong>2 tahun</strong> setelah lisensi terakhir Anda berakhir, kecuali diwajibkan lain oleh hukum yang berlaku.</p>
+        <p>Meskipun kami menerapkan standar keamanan yang baik, tidak ada sistem yang sepenuhnya kebal terhadap risiko keamanan siber. Kami menyarankan Anda untuk tidak membagikan license key kepada pihak lain.</p>
+      </div>
+
+      <!-- 4 -->
+      <div class="section-block" id="s4">
+        <h2><span class="sec-num">4</span>Berbagi Data dengan Pihak Ketiga</h2>
+        <p>Kami dapat berbagi data Anda dengan pihak ketiga terpercaya hanya dalam kondisi berikut:</p>
+        <ul>
+          <li><strong>Midtrans (Payment Gateway):</strong> Untuk memproses transaksi pembayaran secara aman. Midtrans terdaftar dan diawasi oleh Bank Indonesia.</li>
+          <li><strong>Penyedia Layanan Email:</strong> Untuk mengirimkan lisensi dan komunikasi penting kepada Anda.</li>
+          <li><strong>Kewajiban Hukum:</strong> Jika diwajibkan oleh hukum, perintah pengadilan, atau otoritas pemerintah yang berwenang.</li>
+        </ul>
+        <p>Kami <strong>tidak menjual, menyewakan, atau memperdagangkan</strong> data pribadi Anda kepada pihak ketiga untuk tujuan pemasaran atau komersial apapun.</p>
+      </div>
+
+      <!-- 5 -->
+      <div class="section-block" id="s5">
+        <h2><span class="sec-num">5</span>Cookie & Teknologi Pelacakan</h2>
+        <p>Website kami menggunakan cookie dan teknologi serupa untuk meningkatkan pengalaman pengguna. Jenis cookie yang kami gunakan:</p>
+        <ul>
+          <li><strong>Cookie Esensial:</strong> Diperlukan agar website berfungsi dengan benar. Tidak dapat dinonaktifkan.</li>
+          <li><strong>Cookie Analitik:</strong> Membantu kami memahami bagaimana pengunjung berinteraksi dengan website secara anonim.</li>
+          <li><strong>Cookie Sesi:</strong> Menyimpan preferensi sementara selama sesi kunjungan Anda.</li>
+        </ul>
+        <p>Anda dapat mengatur preferensi cookie melalui pengaturan browser Anda. Namun, menonaktifkan cookie tertentu dapat mempengaruhi fungsionalitas website.</p>
+      </div>
+
+      <!-- 6 -->
+      <div class="section-block" id="s6">
+        <h2><span class="sec-num">6</span>Hak-Hak Pengguna</h2>
+        <p>Sesuai dengan prinsip perlindungan data, Anda memiliki hak-hak berikut terkait data pribadi Anda:</p>
+        <ul>
+          <li><strong>Hak Akses:</strong> Meminta informasi tentang data pribadi yang kami miliki tentang Anda.</li>
+          <li><strong>Hak Koreksi:</strong> Meminta perbaikan data yang tidak akurat atau tidak lengkap.</li>
+          <li><strong>Hak Penghapusan:</strong> Meminta penghapusan data pribadi Anda, dengan ketentuan tidak melanggar kewajiban hukum kami.</li>
+          <li><strong>Hak Pembatasan:</strong> Meminta pembatasan pemrosesan data Anda dalam kondisi tertentu.</li>
+          <li><strong>Hak Keberatan:</strong> Mengajukan keberatan atas pemrosesan data Anda untuk tujuan tertentu.</li>
+        </ul>
+        <p>Untuk menggunakan hak-hak Anda, silakan hubungi kami melalui kontak yang tersedia di bagian bawah halaman ini. Kami akan merespons permintaan Anda dalam waktu maksimal <strong>14 hari kerja</strong>.</p>
+      </div>
+
+      <!-- 7 -->
+      <div class="section-block" id="s7">
+        <h2><span class="sec-num">7</span>Data Anak-Anak</h2>
+        <p>Layanan CertGen Pro tidak ditujukan untuk individu yang berusia di bawah <strong>17 tahun</strong>. Kami tidak secara sengaja mengumpulkan data pribadi dari anak-anak.</p>
+        <p>Apabila Anda mengetahui bahwa anak di bawah umur telah memberikan data pribadi kepada kami tanpa persetujuan orang tua atau wali, mohon segera hubungi kami agar kami dapat menghapus data tersebut.</p>
+      </div>
+
+      <!-- 8 -->
+      <div class="section-block" id="s8">
+        <h2><span class="sec-num">8</span>Perubahan Kebijakan Privasi</h2>
+        <p>Kami dapat memperbarui Kebijakan Privasi ini dari waktu ke waktu untuk mencerminkan perubahan pada praktik kami atau karena alasan hukum, operasional, atau peraturan lainnya.</p>
+        <p>Jika terjadi perubahan yang signifikan, kami akan memberitahu Anda melalui email yang terdaftar atau dengan menempatkan pemberitahuan yang jelas di website kami setidaknya <strong>7 hari</strong> sebelum perubahan berlaku.</p>
+        <p>Penggunaan Layanan kami setelah tanggal berlakunya perubahan dianggap sebagai persetujuan Anda terhadap kebijakan yang telah diperbarui.</p>
+      </div>
+
+      <!-- 9 -->
+      <div class="section-block" id="s9">
+        <h2><span class="sec-num">9</span>Hubungi Kami</h2>
+        <p>Jika Anda memiliki pertanyaan, kekhawatiran, atau permintaan terkait Kebijakan Privasi ini atau pemrosesan data pribadi Anda, silakan hubungi kami:</p>
+        <ul>
+          <li><strong>Email:</strong> email@imaginestudio.online</li>
+          <li><strong>WhatsApp:</strong> 089627312600</li>
+          <li><strong>Pengelola:</strong> ImagineStudio, Indonesia</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- CONTACT BOX -->
+    <div class="contact-box" role="complementary" aria-label="Kontak dukungan">
+      <h3>Ada Pertanyaan Tentang Privasi Anda?</h3>
+      <p>Tim kami siap membantu menjawab pertanyaan seputar data dan privasi Anda.</p>
+      <div class="contact-links">
+        <a href="mailto:email@imaginestudio.online" class="contact-link email">📧 email@imaginestudio.online</a>
+        <a href="https://wa.me/6289627312600" target="_blank" rel="noopener noreferrer" class="contact-link wa">💬 WhatsApp Kami</a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer role="contentinfo">
+  <div class="footer-inner">
+    <a href="/" class="footer-logo" aria-label="CertGen Pro">
+      <div class="logo-icon" aria-hidden="true">C</div>
+      <span class="logo-text">CertGen <span>Pro</span></span>
+    </a>
+    <div class="footer-links-row">
+      <a href="/">Beranda</a>
+      <a href="/#pricing">Harga</a>
+      <a href="/renew.html">Perpanjang Lisensi</a>
+      <a href="/kebijakan-privasi.html" class="active">Kebijakan Privasi</a>
+      <a href="/syarat-ketentuan.html">Syarat &amp; Ketentuan</a>
+    </div>
+    <p class="footer-copy">© 2025 ImagineStudio. Hak cipta dilindungi undang-undang.</p>
+  </div>
+</footer>
+
+</body>
+</html>
