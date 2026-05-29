@@ -1,0 +1,13 @@
+{
+  "name": "certgenpro-backend",
+  "version": "2.0.0",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.106.2",
+    "midtrans-client": "^1.4.0",
+    "node-fetch": "^2.7.0"
+  }
+}
