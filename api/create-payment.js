@@ -1,106 +1,116 @@
-// api/create-payment.js
-const midtransClient = require('midtrans-client');
+// ============================================================
+// create-payment.js
+// Membuat Midtrans Snap token untuk checkout
+// - Harga divalidasi SERVER-SIDE dari PRICELIST (bukan dari frontend)
+// - Support mode Production & Sandbox via env MIDTRANS_IS_PRODUCTION
+// ============================================================
+
 const { createClient } = require('@supabase/supabase-js');
+const midtransClient = require('midtrans-client');
 
-// 1. Inisialisasi Supabase
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+function setCors(res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
 
-// 2. Inisialisasi Midtrans Snap
-const snap = new midtransClient.Snap({
-  isProduction: process.env.MIDTRANS_IS_PRODUCTION === 'true',
-  serverKey: process.env.MIDTRANS_SERVER_KEY,
-  clientKey: process.env.MIDTRANS_CLIENT_KEY
-});
-
-// Daftar harga resmi (Server-side validation)
+// ── PRICELIST (server-side authority) ──
 const PRICELIST = {
-  'paket harian':   19000,
-  'paket bulanan':  49000,
-  'paket tahunan':  99000,
-  'paket lifetime': 299000
+  'Paket Harian': { amount: 29000, type: 'daily' },
+  'Paket Bulanan': { amount: 99000, type: 'monthly' },
+  'Paket Tahunan': { amount: 299000, type: 'yearly' },
+  'Paket Seumur Hidup': { amount: 499000, type: 'lifetime' },
 };
 
 module.exports = async function handler(req, res) {
-  // --- KONFIGURASI CORS ---
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
+  setCors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const { name, email, whatsapp, paket, kota } = req.body || {};
+
+  if (!name || !email || !whatsapp || !paket) {
+    return res.status(400).json({ error: 'Field name, email, whatsapp, paket wajib diisi' });
+  }
+
+  const paketData = PRICELIST[paket];
+  if (!paketData) {
+    return res.status(400).json({ error: 'Paket tidak dikenal' });
+  }
+
+  const { amount, type: packageType } = paketData;
+
+  // Format WA: hilangkan karakter non-digit, pastikan diawali 62
+  let waClean = whatsapp.replace(/\D/g, '');
+  if (waClean.startsWith('0')) waClean = '62' + waClean.slice(1);
+  if (!waClean.startsWith('62')) waClean = '62' + waClean;
+
+  // Order ID unik
+  const orderId = `CGP-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+
+  // Simpan transaksi ke Supabase
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  const { error: dbError } = await supabase.from('transactions').insert([{
+    order_id: orderId,
+    customer_name: name,
+    customer_email: email,
+    customer_wa: waClean,
+    customer_city: kota || null,
+    paket,
+    amount,
+    status: 'pending',
+  }]);
+
+  if (dbError) {
+    console.error('DB error create-payment:', dbError);
+    return res.status(500).json({ error: 'Gagal menyimpan transaksi' });
+  }
+
+  // Inisialisasi Midtrans Snap
+  const isProduction = process.env.MIDTRANS_IS_PRODUCTION === 'true';
+  const snap = new midtransClient.Snap({
+    isProduction,
+    serverKey: process.env.MIDTRANS_SERVER_KEY,
+    clientKey: process.env.MIDTRANS_CLIENT_KEY,
+  });
+
+  const parameter = {
+    transaction_details: {
+      order_id: orderId,
+      gross_amount: amount,
+    },
+    customer_details: {
+      first_name: name,
+      email,
+      phone: waClean,
+    },
+    item_details: [{
+      id: packageType,
+      price: amount,
+      quantity: 1,
+      name: paket,
+    }],
+    callbacks: {
+      finish: `${process.env.LANDING_URL || ''}/thank-you.html?order=${orderId}`,
+      error: `${process.env.LANDING_URL || ''}/payment-status.html?status=error&order_id=${orderId}`,
+      pending: `${process.env.LANDING_URL || ''}/payment-status.html?status=unfinish&order_id=${orderId}`,
+    },
+    // Webhook dikirim otomatis oleh Midtrans ke notification_url di dashboard
+    // Untuk production: set di Midtrans Dashboard > Settings > Payment > Notification URL
+  };
 
   try {
-    // Menangkap kota dari req.body (opsional, jika diblock adblock akan kosong)
-    const { name, email, whatsapp, paket, kota } = req.body;
-
-    if (!name || !email || !whatsapp || !paket) {
-      return res.status(400).json({ message: 'Semua kolom wajib diisi!' });
-    }
-
-    const paketKey = paket.toLowerCase().trim();
-    const expectedPrice = PRICELIST[paketKey];
-
-    if (!expectedPrice) {
-      return res.status(400).json({ message: 'Paket tidak dikenali oleh sistem.' });
-    }
-
-    const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
-    const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
-    const orderId = `CGP-${timestamp}-${randomStr}`;
-
-    // ✅ Ambil base URL dari host header (otomatis sesuai domain production/preview)
-    const baseUrl = `https://${req.headers.host}`;
-
-    const parameter = {
-      transaction_details: { order_id: orderId, gross_amount: expectedPrice },
-      customer_details: { first_name: name, email: email, phone: whatsapp },
-      item_details: [{
-        id: paketKey.replace(/\s/g, '_'),
-        price: expectedPrice,
-        quantity: 1,
-        name: `Lisensi CertGen Pro - ${paket}`
-      }],
-      custom_field1: name,
-      custom_field2: email,
-      // Menyisipkan KOTA ke JSON bersama WA & Paket untuk webhook
-      custom_field3: JSON.stringify({ wa: whatsapp, paket: paket, kota: kota || "" }),
-
-      callbacks: {
-        finish:  `${baseUrl}/thank-you.html?order=${orderId}`,
-        // ✅ Diperbaiki: diarahkan ke payment-status.html (bukan renew.html)
-        error:   `${baseUrl}/payment-status.html?status=error&order_id=${orderId}`,
-        pending: `${baseUrl}/thank-you.html?pending=1&order=${orderId}`
-      },
-
-      // ✅ WAJIB untuk Production: eksplisit kirim webhook URL di setiap transaksi
-      // karena menu "Integrations" tidak tersedia di mode Production Midtrans
-      notification_url: `${baseUrl}/api/midtrans-webhook`
-    };
-
-    const transaction = await snap.createTransaction(parameter);
-    const snapToken = transaction.token;
-
-    const { error: dbError } = await supabase
-      .from('transactions')
-      .insert([{
-        order_id:       orderId,
-        customer_name:  name,
-        customer_email: email,
-        customer_wa:    whatsapp,
-        paket:          paket,
-        amount:         expectedPrice,
-        status:         'pending',
-        created_at:     new Date().toISOString()
-      }]);
-
-    if (dbError) throw new Error('Gagal menyimpan data ke database.');
-
-    return res.status(200).json({ snap_token: snapToken, order_id: orderId });
-
-  } catch (error) {
-    console.error('Error Create Payment:', error);
-    return res.status(500).json({ message: error.message || 'Terjadi kesalahan sistem.' });
+    const snapResponse = await snap.createTransaction(parameter);
+    return res.status(200).json({
+      snap_token: snapResponse.token,
+      order_id: orderId,
+    });
+  } catch (err) {
+    console.error('Midtrans error:', err);
+    return res.status(500).json({ error: 'Gagal membuat token pembayaran', detail: err.message });
   }
 };

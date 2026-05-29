@@ -1,59 +1,50 @@
-// api/get-recent-sales.js
+// ============================================================
+// get-recent-sales.js
+// Mengembalikan data penjualan terakhir untuk social proof
+// Hanya return: nama, kota, paket (TANPA email/WA)
+// ============================================================
+
 const { createClient } = require('@supabase/supabase-js');
 
-module.exports = async function handler(req, res) {
-  // --- KONFIGURASI CORS ---
+function setCors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+module.exports = async function handler(req, res) {
+  setCors(res);
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('customer_name, customer_city, paket, paid_at')
+    .eq('status', 'paid')
+    .order('paid_at', { ascending: false })
+    .limit(20);
+
+  if (error) {
+    return res.status(500).json([]);
   }
 
-  if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
+  // Anonimkan nama: "Budi S." → "Budi S"
+  const cleaned = (data || []).map(t => ({
+    name: anonymizeName(t.customer_name),
+    city: t.customer_city || null,
+    paket: t.paket,
+  }));
 
-  try {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-
-    // Validasi internal variabel env agar tidak crash senyap
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Supabase environment variables are missing on host.");
-    }
-
-    // Inisialisasi di dalam handler untuk kestabilan serverless cold-start
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('customer_name, customer_city, paket, paid_at')
-      .eq('status', 'paid')
-      .order('paid_at', { ascending: false })
-      .limit(10);
-
-    if (error) throw error;
-
-    const formattedData = (data || []).map(trx => {
-      let nameParts = (trx.customer_name || "Pelanggan").trim().split(' ');
-      let displayName = nameParts[0];
-      if (nameParts.length > 1) {
-        displayName += ' ' + nameParts[nameParts.length - 1].charAt(0).toUpperCase() + '.';
-      }
-
-      return {
-        name: displayName,
-        city: trx.customer_city || "",
-        paket: trx.paket || "paket bulanan",
-        time: trx.paid_at
-      };
-    });
-
-    return res.status(200).json(formattedData);
-  } catch (error) {
-    console.error('Error fetching sales:', error);
-    return res.status(500).json({ message: 'Internal Server Error', error: error.message });
-  }
+  return res.status(200).json(cleaned);
 };
+
+function anonymizeName(fullName) {
+  if (!fullName) return 'Pembeli';
+  const parts = fullName.trim().split(' ');
+  if (parts.length === 1) return parts[0];
+  return parts[0] + ' ' + parts[1][0] + '.';
+}
