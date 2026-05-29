@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Status Pembayaran — CertGen Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-deep:    #060b1a;
+      --bg-card:    #0d1630;
+      --bg-border:  #1a2a50;
+      --orange:     #f97316;
+      --orange-dim: #7c3a0f;
+      --red:        #ef4444;
+      --red-dim:    #7f1d1d;
+      --text-hi:    #f0f4ff;
+      --text-mid:   #8fa3c8;
+      --text-lo:    #3d5278;
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--bg-deep);
+      color: var(--text-hi);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* ── BACKGROUND GRID ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(249,115,22,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(249,115,22,.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+
+    /* ── GLOW BLOB ── */
+    .glow {
+      position: fixed;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      opacity: .18;
+      transition: background .6s;
+    }
+    .glow-1 { top: -200px; left: -200px; }
+    .glow-2 { bottom: -200px; right: -200px; }
+
+    body.unfinish .glow-1 { background: #f97316; }
+    body.unfinish .glow-2 { background: #fb923c; }
+    body.error    .glow-1 { background: #ef4444; }
+    body.error    .glow-2 { background: #dc2626; }
+
+    /* ── PAGE LAYOUT ── */
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── LOGO ── */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 48px;
+      opacity: 0;
+      animation: fadeUp .5s .1s forwards;
+    }
+    .logo-icon {
+      width: 38px; height: 38px;
+      background: var(--orange);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+    }
+    .logo-icon svg { width: 22px; height: 22px; fill: #fff; }
+    .logo-text {
+      font-weight: 800;
+      font-size: 1.2rem;
+      letter-spacing: -.01em;
+    }
+    .logo-text span { color: var(--orange); }
+
+    /* ── CARD ── */
+    .card {
+      width: 100%;
+      max-width: 480px;
+      background: var(--bg-card);
+      border: 1px solid var(--bg-border);
+      border-radius: 20px;
+      padding: 44px 40px 40px;
+      text-align: center;
+      opacity: 0;
+      animation: fadeUp .55s .2s forwards;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 200px; height: 1px;
+      transition: background .6s;
+    }
+    body.unfinish .card::before { background: linear-gradient(90deg, transparent, var(--orange), transparent); }
+    body.error    .card::before { background: linear-gradient(90deg, transparent, var(--red),    transparent); }
+
+    /* ── ICON CIRCLE ── */
+    .icon-wrap {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 28px;
+      position: relative;
+      transition: background .6s, border-color .6s;
+    }
+    body.unfinish .icon-wrap {
+      background: rgba(249,115,22,.12);
+      border: 2px solid rgba(249,115,22,.3);
+    }
+    body.error .icon-wrap {
+      background: rgba(239,68,68,.12);
+      border: 2px solid rgba(239,68,68,.3);
+    }
+    .icon-wrap svg { width: 36px; height: 36px; transition: stroke .6s; }
+    body.unfinish .icon-wrap svg { stroke: var(--orange); }
+    body.error    .icon-wrap svg { stroke: var(--red); }
+
+    /* pulse ring */
+    .icon-wrap::after {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 1px solid;
+      animation: pulse 2s ease-out infinite;
+      transition: border-color .6s;
+    }
+    body.unfinish .icon-wrap::after { border-color: rgba(249,115,22,.3); }
+    body.error    .icon-wrap::after { border-color: rgba(239,68,68,.3); }
+
+    @keyframes pulse {
+      0%   { transform: scale(1);   opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    /* ── BADGE ── */
+    .badge {
+      display: inline-block;
+      font-family: 'Space Mono', monospace;
+      font-size: .65rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 99px;
+      margin-bottom: 16px;
+      transition: background .6s, color .6s;
+    }
+    body.unfinish .badge { background: rgba(249,115,22,.15); color: var(--orange); }
+    body.error    .badge { background: rgba(239,68,68,.15);  color: var(--red); }
+
+    /* ── HEADING ── */
+    .heading {
+      font-size: 1.65rem;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      letter-spacing: -.02em;
+    }
+
+    .subtext {
+      font-size: .95rem;
+      color: var(--text-mid);
+      line-height: 1.65;
+      margin-bottom: 32px;
+    }
+
+    /* ── INFO BOX ── */
+    .info-box {
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--bg-border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 28px;
+      text-align: left;
+    }
+    .info-box p {
+      font-size: .85rem;
+      color: var(--text-mid);
+      line-height: 1.7;
+    }
+    .info-box strong { color: var(--text-hi); }
+
+    /* ── BUTTONS ── */
+    .btn-group { display: flex; flex-direction: column; gap: 10px; }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 24px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: transform .15s, box-shadow .15s, opacity .15s;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: var(--orange);
+      color: #fff;
+      box-shadow: 0 4px 24px rgba(249,115,22,.35);
+    }
+    .btn-primary:hover { box-shadow: 0 6px 32px rgba(249,115,22,.5); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-mid);
+      border: 1px solid var(--bg-border);
+    }
+    .btn-ghost:hover { border-color: #2d4070; color: var(--text-hi); }
+
+    /* ── FOOTER ── */
+    .footer {
+      margin-top: 36px;
+      font-size: .78rem;
+      color: var(--text-lo);
+      opacity: 0;
+      animation: fadeUp .5s .4s forwards;
+    }
+    .footer a { color: var(--text-mid); text-decoration: none; }
+    .footer a:hover { color: var(--orange); }
+
+    /* ── TIMER (unfinish only) ── */
+    .timer-wrap {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: .82rem;
+      color: var(--text-mid);
+      margin-top: 16px;
+    }
+    body.unfinish .timer-wrap { display: flex; }
+    .timer-count {
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: .9rem;
+      color: var(--orange);
+    }
+
+    /* ── ANIMATION ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 520px) {
+      .card { padding: 36px 24px 32px; }
+      .heading { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glow glow-1"></div>
+  <div class="glow glow-2"></div>
+
+  <div class="page">
+
+    <!-- LOGO -->
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M7.5 4.5A2 2 0 0 0 6 6.5v1A2 2 0 0 1 4 9.5v5a2 2 0 0 1 2 2v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1a2 2 0 0 1 2-2v-5a2 2 0 0 1-2-2v-1a2 2 0 0 0-2-2H7.5z"/></svg>
+      </div>
+      <div class="logo-text">Cert<span>Gen</span> Pro</div>
+    </div>
+
+    <!-- CARD -->
+    <div class="card">
+      <div class="icon-wrap">
+        <!-- icon diganti oleh JS -->
+        <svg id="status-icon" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"></svg>
+      </div>
+
+      <span class="badge" id="badge-text"></span>
+      <h1 class="heading" id="heading"></h1>
+      <p class="subtext" id="subtext"></p>
+
+      <div class="info-box" id="info-box"></div>
+
+      <div class="btn-group" id="btn-group"></div>
+
+      <div class="timer-wrap">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Halaman ini akan tutup dalam</span>
+        <span class="timer-count" id="timer">15</span>
+        <span>detik</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      Ada pertanyaan? Hubungi kami di
+      <a href="mailto:support@certgenpro.id">support@certgenpro.id</a>
+      &nbsp;·&nbsp;
+      <a href="/">Kembali ke Beranda</a>
+    </div>
+
+  </div>
+
+  <script>
+    const params  = new URLSearchParams(window.location.search);
+    const status  = params.get('status') || 'error'; // 'unfinish' | 'error'
+    const orderId = params.get('order_id') || null;
+
+    const cfg = {
+      unfinish: {
+        bodyClass : 'unfinish',
+        badge     : '⏸ Pembayaran Belum Selesai',
+        heading   : 'Pembayaran Anda\nBelum Diselesaikan',
+        subtext   : 'Terlihat seperti Anda menutup halaman sebelum menyelesaikan pembayaran. Jangan khawatir — pesanan Anda masih tersimpan!',
+        info      : `<p>Jika Anda sudah melakukan transfer atau scan QRIS, <strong>tunggu 1–5 menit</strong> lalu cek email Anda. License key dikirim otomatis setelah pembayaran terkonfirmasi.</p><br><p>Belum bayar? Klik <strong>Coba Bayar Lagi</strong> untuk kembali ke halaman pemilihan paket.</p>`,
+        icon      : `<path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>`,
+        buttons   : [
+          { label: '🔄 Coba Bayar Lagi', href: '/', primary: true },
+          { label: '📧 Cek Email Saya',  href: 'https://mail.google.com', primary: false },
+        ],
+        timer: true,
+      },
+      error: {
+        bodyClass : 'error',
+        badge     : '⚠ Pembayaran Gagal',
+        heading   : 'Terjadi Kesalahan\npada Pembayaran',
+        subtext   : 'Pembayaran Anda tidak dapat diproses. Ini bisa terjadi karena koneksi terputus, saldo tidak cukup, atau batas waktu habis.',
+        info      : `<p><strong>Yang perlu Anda lakukan:</strong></p><br>
+          <p>① Pastikan saldo/kartu Anda mencukupi<br>
+          ② Periksa koneksi internet Anda<br>
+          ③ Coba lagi dengan metode pembayaran berbeda<br>
+          ④ Jika sudah terpotong tapi gagal, hubungi kami</p>`,
+        icon      : `<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>`,
+        buttons   : [
+          { label: '↩ Coba Lagi', href: '/', primary: true },
+          { label: '💬 Hubungi Support', href: 'mailto:support@certgenpro.id', primary: false },
+        ],
+        timer: false,
+      },
+    };
+
+    // fallback jika status tidak dikenal
+    const c = cfg[status] || cfg.error;
+
+    // apply
+    document.body.classList.add(c.bodyClass);
+    document.getElementById('badge-text').textContent = c.badge;
+    document.getElementById('heading').innerHTML = c.heading.replace('\n', '<br>');
+    document.getElementById('subtext').textContent = c.subtext;
+    document.getElementById('info-box').innerHTML = c.info;
+    document.getElementById('status-icon').innerHTML = c.icon;
+
+    // tampilkan order_id jika ada
+    if (orderId) {
+      const extra = document.createElement('p');
+      extra.style.cssText = 'font-size:.78rem;color:#3d5278;margin-top:12px;font-family:"Space Mono",monospace;';
+      extra.textContent = 'Order ID: ' + orderId;
+      document.getElementById('info-box').appendChild(extra);
+    }
+
+    // tombol
+    const btnGroup = document.getElementById('btn-group');
+    c.buttons.forEach(b => {
+      const a = document.createElement('a');
+      a.href = b.href;
+      a.textContent = b.label;
+      a.className = 'btn ' + (b.primary ? 'btn-primary' : 'btn-ghost');
+      btnGroup.appendChild(a);
+    });
+
+    // timer countdown (unfinish saja)
+    if (c.timer) {
+      let t = 15;
+      const el = document.getElementById('timer');
+      const iv = setInterval(() => {
+        t--;
+        el.textContent = t;
+        if (t <= 0) { clearInterval(iv); window.location.href = '/'; }
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
