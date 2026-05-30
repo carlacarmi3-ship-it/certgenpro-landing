@@ -1,14 +1,11 @@
 {
-  "name": "certgenpro-backend",
-  "version": "1.0.0",
-  "description": "Backend System for CertGen Pro",
-  "scripts": {
-    "start": "node api/midtrans-webhook.js"
-  },
+  "name": "certgenpro",
+  "version": "3.0.0",
+  "description": "CertGen Pro — Full Automation License Sales System (Monorepo Edition)",
+  "type": "commonjs",
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
-    "axios": "^1.6.7",
-    "hi-base32": "^0.5.1",
-    "midtrans-client": "^1.3.1"
+    "@supabase/supabase-js": "^2.106.2",
+    "axios": "^1.7.0",
+    "midtrans-client": "^1.4.0"
   }
 }
