@@ -1,199 +1,204 @@
-// ============================================================
-// admin-recovery.js
-// Endpoint POST untuk recovery lisensi manual oleh admin
-// Body: { admin_secret, order_id }
-// Alur:
-//   1. Validasi admin_secret
-//   2. Query transactions by order_id
-//   3. Cek apakah sudah ada lisensi → return existing jika ada
-//   4. Jika belum → generate ulang + insert + kirim email & WA ulang
-//   5. Catat ke recovery_log
-// ============================================================
-
+// api/admin-recovery.js — CertGen Pro v3
+const axios = require('axios');
 const { createClient } = require('@supabase/supabase-js');
 const { generateLicenseInternal } = require('./generate-license');
 
-function setCors(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-}
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
-const PAKET_TYPE_MAP = {
-  'Paket Harian': 'daily',
-  'Paket Bulanan': 'monthly',
-  'Paket Tahunan': 'yearly',
-  'Paket Seumur Hidup': 'lifetime',
-  daily: 'daily',
-  monthly: 'monthly',
-  yearly: 'yearly',
-  lifetime: 'lifetime',
+const PACKAGE_NAMES = {
+  daily:    'CertGen Pro — Harian (1 Hari)',
+  monthly:  'CertGen Pro — Bulanan (30 Hari)',
+  yearly:   'CertGen Pro — Tahunan (365 Hari)',
+  lifetime: 'CertGen Pro — Selamanya (Lifetime)',
 };
 
-async function sendEmailBrevo({ toEmail, toName, licenseKey, paketName, downloadLink, downloadMirror, supportWa }) {
-  const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
-    body: JSON.stringify({
-      sender: { name: 'CertGen Pro', email: process.env.BREVO_SENDER_EMAIL },
-      to: [{ email: toEmail, name: toName }],
-      subject: `🔑 Recovery License Key CertGen Pro — ${paketName}`,
-      htmlContent: `<p>Halo <b>${toName}</b>,</p>
-        <p>Berikut license key Anda (recovery):</p>
-        <div style="background:#f0f4ff;border:2px solid #1a237e;border-radius:10px;padding:16px;text-align:center;font-family:monospace;font-size:20px;font-weight:700;letter-spacing:2px;">${licenseKey}</div>
-        <p>Download: <a href="${downloadLink}">${downloadLink}</a></p>
-        <p>Mirror: <a href="${downloadMirror}">${downloadMirror}</a></p>
-        <p>Support WA: <a href="https://wa.me/${supportWa}">Klik di sini</a></p>`,
-    }),
+async function sendBrevoEmail(to_email, to_name, license_key, package_name) {
+  const downloadLink = process.env.APP_DOWNLOAD_LINK || '#';
+  const downloadMirror = process.env.APP_DOWNLOAD_LINK_MIRROR || '#';
+  const supportWA = process.env.SUPPORT_WA || '';
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f9f9f9; padding: 20px;">
+  <div style="background: #fff; border-radius: 12px; padding: 40px; border: 1px solid #e0e0e0;">
+    <h1 style="color: #1a1a2e; font-size: 24px; margin-bottom: 8px;">🔑 Recovery Lisensi CertGen Pro</h1>
+    <p style="color: #555; font-size: 16px;">Halo <strong>${to_name}</strong>, berikut adalah lisensi untuk <strong>${package_name}</strong> Anda.</p>
+    
+    <div style="background: #f0f4ff; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center;">
+      <p style="color: #555; margin: 0 0 8px; font-size: 14px;">Lisensi Anda:</p>
+      <p style="font-family: monospace; font-size: 24px; font-weight: bold; color: #2563eb; letter-spacing: 2px; margin: 0;">${license_key}</p>
+    </div>
+
+    <div style="margin: 24px 0;">
+      <a href="${downloadLink}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-right: 12px;">⬇️ Download Aplikasi</a>
+      <a href="${downloadMirror}" style="display: inline-block; background: #475569; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">🔗 Link Mirror</a>
+    </div>
+
+    <p style="color: #888; font-size: 14px; margin-top: 32px; border-top: 1px solid #eee; padding-top: 16px;">
+      Butuh bantuan? Hubungi support: <strong>+${supportWA}</strong>
+    </p>
+  </div>
+</body>
+</html>`;
+
+  await axios.post('https://api.brevo.com/v3/smtp/email', {
+    sender: { name: 'CertGen Pro', email: process.env.BREVO_SENDER_EMAIL },
+    to: [{ email: to_email, name: to_name }],
+    subject: `🔑 [Recovery] Lisensi CertGen Pro Anda — ${license_key}`,
+    htmlContent,
+  }, {
+    headers: {
+      'api-key': process.env.BREVO_API_KEY,
+      'Content-Type': 'application/json',
+    },
   });
-  return resp.ok;
 }
 
-async function sendWAFonnte({ waNumber, name, licenseKey, paketName, downloadLink, supportWa }) {
-  const message =
-    `[RECOVERY] Halo *${name}*,\n\n` +
-    `Berikut license key recovery Anda:\n` +
-    `*CertGen Pro — ${paketName}*\n\n` +
-    `🔑 Key: \`${licenseKey}\`\n` +
-    `📥 Download: ${downloadLink}\n\n` +
-    `Butuh bantuan? wa.me/${supportWa}`;
+async function sendFonnteWA(to_number, license_key, package_name) {
+  const downloadLink = process.env.APP_DOWNLOAD_LINK || '#';
+  const supportWA = process.env.SUPPORT_WA || '';
 
-  const resp = await fetch('https://api.fonnte.com/send', {
-    method: 'POST',
-    headers: { 'Authorization': process.env.FONNTE_TOKEN, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ target: waNumber, message, countryCode: '62' }),
+  const message = `🔑 *[Recovery] Lisensi CertGen Pro*
+
+Halo! Berikut adalah lisensi Anda.
+
+📦 *Paket:* ${package_name}
+🔑 *Lisensi Key:*
+\`${license_key}\`
+
+📥 *Download Aplikasi:*
+${downloadLink}
+
+Butuh bantuan? Chat: wa.me/${supportWA}`;
+
+  await axios.post('https://api.fonnte.com/send', {
+    target: to_number,
+    message,
+  }, {
+    headers: { Authorization: process.env.FONNTE_TOKEN },
   });
-  return resp.ok;
 }
 
 module.exports = async function handler(req, res) {
-  setCors(res);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { admin_secret, order_id } = req.body || {};
+  const { admin_secret, order_id } = req.body;
 
-  // 1. Validasi admin_secret
   if (admin_secret !== process.env.ADMIN_SECRET) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return res.status(401).json({ error: 'Unauthorized: Invalid Admin Secret' });
   }
+
   if (!order_id) {
-    return res.status(400).json({ error: 'order_id wajib diisi' });
+    return res.status(400).json({ error: 'order_id is required' });
   }
 
-  const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
-
-  // 2. Query transaksi
-  const { data: trx, error: trxErr } = await supabase
+  // Ambil data transaksi
+  const { data: transaction, error: txError } = await supabase
     .from('transactions')
     .select('*')
     .eq('order_id', order_id)
     .single();
 
-  if (trxErr || !trx) {
-    return res.status(404).json({ error: `Transaksi dengan order_id ${order_id} tidak ditemukan` });
+  if (txError || !transaction) {
+    return res.status(404).json({ error: 'Transaction not found' });
   }
 
-  // 3. Cek apakah lisensi sudah ada
-  const { data: existingLic } = await supabase
+  if (transaction.status !== 'paid') {
+    return res.status(400).json({ error: `Transaction status is '${transaction.status}', not 'paid'. Recovery only for paid transactions.` });
+  }
+
+  // Cek apakah lisensi sudah ada
+  const { data: existingLicense } = await supabase
     .from('licenses')
     .select('*')
     .eq('order_id', order_id)
-    .maybeSingle();
+    .single();
 
-  if (existingLic) {
-    // Sudah ada — return data existing
-    return res.status(200).json({
-      success: true,
-      was_existing: true,
-      license_key: existingLic.license_key,
-      customer_email: trx.customer_email,
-      customer_wa: trx.customer_wa,
-      paket: trx.paket,
-      email_sent: existingLic.email_sent,
-      wa_sent: existingLic.wa_sent,
-      message: 'Lisensi sudah ada di database. Tidak digenerate ulang.',
-    });
+  let license_key;
+  let was_existing = false;
+  let email_sent = false;
+  let wa_sent = false;
+
+  if (existingLicense) {
+    // Lisensi sudah ada — return existing, kirim ulang notifikasi
+    license_key = existingLicense.license_key;
+    was_existing = true;
+    email_sent = existingLicense.email_sent;
+    wa_sent = existingLicense.wa_sent;
+  } else {
+    // Generate lisensi baru
+    const appId = 'CERTGEN';
+    const secret = process.env.LICENSE_SECRET;
+    const { license_code } = generateLicenseInternal(appId, secret, transaction.paket, transaction.customer_email);
+    license_key = license_code;
+    const package_name = PACKAGE_NAMES[transaction.paket] || transaction.paket;
+
+    await supabase.from('licenses').insert([{
+      license_key,
+      order_id,
+      buyer_email: transaction.customer_email,
+      package_type: transaction.paket,
+      package_name,
+      app_id: appId,
+      status: 'active',
+      expired_at: null,
+    }]);
   }
 
-  // 4. Generate ulang lisensi baru
-  const appId = 'CERTGEN';
-  const packageType = PAKET_TYPE_MAP[trx.paket] || 'lifetime';
-  const { license_code } = generateLicenseInternal(appId, process.env.LICENSE_SECRET, packageType, trx.customer_email);
+  const package_name = PACKAGE_NAMES[transaction.paket] || transaction.paket;
 
-  const { error: licErr } = await supabase.from('licenses').insert([{
-    license_key: license_code,
-    order_id,
-    buyer_email: trx.customer_email,
-    package_type: packageType,
-    package_name: trx.paket,
-    app_id: appId,
-    device_id: null,
-    status: 'active',
-    activated_at: null,
-    expired_at: null,
-    email_sent: false,
-    wa_sent: false,
-  }]);
-
-  if (licErr) {
-    return res.status(500).json({ error: 'Gagal insert lisensi', detail: licErr.message });
+  // Kirim ulang Email
+  try {
+    await sendBrevoEmail(transaction.customer_email, transaction.customer_name, license_key, package_name);
+    email_sent = true;
+  } catch (err) {
+    console.error('Brevo error:', err.message);
   }
 
-  // 5. Kirim ulang email & WA
-  let emailSent = false;
-  let waSent = false;
-
+  // Kirim ulang WA
   try {
-    emailSent = await sendEmailBrevo({
-      toEmail: trx.customer_email,
-      toName: trx.customer_name,
-      licenseKey: license_code,
-      paketName: trx.paket,
-      downloadLink: process.env.APP_DOWNLOAD_LINK,
-      downloadMirror: process.env.APP_DOWNLOAD_LINK_MIRROR,
-      supportWa: process.env.SUPPORT_WA,
-    });
-  } catch (e) { console.error('Email recovery gagal:', e.message); }
+    if (transaction.customer_wa) {
+      await sendFonnteWA(transaction.customer_wa, license_key, package_name);
+      wa_sent = true;
+    }
+  } catch (err) {
+    console.error('Fonnte error:', err.message);
+  }
 
-  try {
-    waSent = await sendWAFonnte({
-      waNumber: trx.customer_wa,
-      name: trx.customer_name,
-      licenseKey: license_code,
-      paketName: trx.paket,
-      downloadLink: process.env.APP_DOWNLOAD_LINK,
-      supportWa: process.env.SUPPORT_WA,
-    });
-  } catch (e) { console.error('WA recovery gagal:', e.message); }
-
-  // Update status kirim
+  // Update flag di DB
   await supabase.from('licenses')
-    .update({ email_sent: emailSent, wa_sent: waSent })
-    .eq('license_key', license_code);
+    .update({ email_sent, wa_sent })
+    .eq('license_key', license_key);
 
-  // 6. Catat ke recovery_log
+  // Catat ke recovery_log
   await supabase.from('recovery_log').insert([{
     order_id,
-    customer_email: trx.customer_email,
-    customer_wa: trx.customer_wa,
-    original_key: null,
-    new_key: license_code,
-    reason: 'Manual recovery by admin',
+    customer_email: transaction.customer_email,
+    customer_wa: transaction.customer_wa || null,
+    original_key: was_existing ? license_key : null,
+    new_key: was_existing ? null : license_key,
+    reason: was_existing ? 'Resend existing license' : 'Generated new license (missing)',
     resolved_by: 'admin',
   }]);
 
   return res.status(200).json({
-    success: true,
-    was_existing: false,
-    license_key: license_code,
-    customer_email: trx.customer_email,
-    customer_wa: trx.customer_wa,
-    paket: trx.paket,
-    email_sent: emailSent,
-    wa_sent: waSent,
+    message: was_existing ? 'Existing license resent' : 'New license generated and sent',
+    license_key,
+    customer_email: transaction.customer_email,
+    customer_wa: transaction.customer_wa,
+    paket: transaction.paket,
+    was_existing,
+    email_sent,
+    wa_sent,
   });
 };
