@@ -1,210 +1,340 @@
-// api/midtrans-webhook.js — CertGen Pro v3
-const crypto = require('crypto');
-const axios = require('axios');
-const { createClient } = require('@supabase/supabase-js');
-const { generateLicenseInternal } = require('./generate-license');
+// api/midtrans-webhook.js
+// Menerima notifikasi settlement dari Midtrans
+// Flow: verifikasi HMAC → update transaksi → generate lisensi → kirim email (Brevo) + WA (Fonnte)
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const crypto                           = require('crypto');
+const axios                            = require('axios');
+const { createClient }                 = require('@supabase/supabase-js');
+const { generateLicenseInternal }      = require('./generate-license');
 
-// Nama paket untuk tampilan
-const PACKAGE_NAMES = {
-  daily:    'CertGen Pro — Harian (1 Hari)',
-  monthly:  'CertGen Pro — Bulanan (30 Hari)',
-  yearly:   'CertGen Pro — Tahunan (365 Hari)',
-  lifetime: 'CertGen Pro — Selamanya (Lifetime)',
+// ============================================================
+// Verifikasi Midtrans signature
+// signature_key = SHA512(order_id + status_code + gross_amount + server_key)
+// ============================================================
+function verifySignature(orderId, statusCode, grossAmount, serverKey, receivedSig) {
+  const raw  = `${orderId}${statusCode}${grossAmount}${serverKey}`;
+  const hash = crypto.createHash('sha512').update(raw).digest('hex');
+  return hash === receivedSig;
+}
+
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST')   return res.status(405).json({ error: 'Method not allowed' });
+
+  const body = req.body;
+
+  console.log('[webhook] Received:', JSON.stringify({
+    order_id:           body.order_id,
+    transaction_status: body.transaction_status,
+    fraud_status:       body.fraud_status,
+    payment_type:       body.payment_type,
+  }));
+
+  // ── Verifikasi signature ───────────────────────────────────
+  const isValid = verifySignature(
+    body.order_id,
+    body.status_code,
+    body.gross_amount,
+    process.env.MIDTRANS_SERVER_KEY,
+    body.signature_key
+  );
+
+  if (!isValid) {
+    console.error('[webhook] Signature verification FAILED:', body.order_id);
+    return res.status(400).json({ error: 'Invalid signature.' });
+  }
+
+  // ── Hanya proses jika settlement / capture ─────────────────
+  const txStatus    = body.transaction_status;
+  const fraudStatus = body.fraud_status;
+
+  const isSettled = (
+    txStatus === 'settlement' ||
+    (txStatus === 'capture' && fraudStatus === 'accept')
+  );
+
+  if (!isSettled) {
+    console.log(`[webhook] Skipping status: ${txStatus} / fraud: ${fraudStatus}`);
+    return res.status(200).json({ message: `Status ${txStatus} — tidak diproses.` });
+  }
+
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  // ── Cek apakah sudah pernah diproses (idempotency) ─────────
+  const { data: txRow } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('order_id', body.order_id)
+    .single();
+
+  if (!txRow) {
+    console.error('[webhook] Transaksi tidak ditemukan:', body.order_id);
+    return res.status(404).json({ error: 'Transaksi tidak ditemukan.' });
+  }
+
+  if (txRow.status === 'paid') {
+    console.log('[webhook] Sudah diproses sebelumnya:', body.order_id);
+    return res.status(200).json({ message: 'Already processed.' });
+  }
+
+  // ── Update status transaksi → paid ─────────────────────────
+  const { error: updateErr } = await supabase
+    .from('transactions')
+    .update({
+      status:       'paid',
+      payment_type: body.payment_type,
+      paid_at:      body.settlement_time || new Date().toISOString(),
+      raw_payload:  body,
+    })
+    .eq('order_id', body.order_id);
+
+  if (updateErr) {
+    console.error('[webhook] Update transaksi gagal:', updateErr);
+    return res.status(500).json({ error: 'Gagal update transaksi.' });
+  }
+
+  // ── Ambil package_type dari custom_field atau raw_payload ──
+  const packageType = body.custom_field1
+    || txRow.raw_payload?.package_type
+    || 'monthly';
+
+  const packageNames = {
+    daily:    'Paket Harian',
+    monthly:  'Paket Bulanan',
+    yearly:   'Paket Tahunan',
+    lifetime: 'Paket Lifetime',
+  };
+
+  // ── Generate License Key ───────────────────────────────────
+  // Cek dulu apakah sudah ada lisensi (race condition guard)
+  const { data: existingLic } = await supabase
+    .from('licenses')
+    .select('license_key')
+    .eq('order_id', body.order_id)
+    .single();
+
+  let licenseKey;
+
+  if (existingLic) {
+    licenseKey = existingLic.license_key;
+    console.log('[webhook] Lisensi sudah ada:', licenseKey);
+  } else {
+    const { license_code } = generateLicenseInternal(
+      'CERTGEN',
+      process.env.LICENSE_SECRET,
+      packageType,
+      txRow.customer_email
+    );
+    licenseKey = license_code;
+
+    const { error: licErr } = await supabase.from('licenses').insert({
+      license_key:  licenseKey,
+      order_id:     body.order_id,
+      buyer_email:  txRow.customer_email,
+      package_type: packageType,
+      package_name: packageNames[packageType] || packageType,
+      app_id:       'CERTGEN',
+      status:       'active',
+      // expired_at: NULL — diisi saat user aktivasi di desktop app
+    });
+
+    if (licErr) {
+      console.error('[webhook] Insert lisensi gagal:', licErr);
+      // Tetap lanjut kirim email/WA jika bisa
+    } else {
+      // Log event
+      await supabase.from('license_events').insert({
+        license_key: licenseKey,
+        event_type:  'generated',
+        note:        `Generated via webhook. Order: ${body.order_id}`,
+      });
+      console.log('[webhook] Lisensi digenerate:', licenseKey);
+    }
+  }
+
+  // ── Nomor WA pembeli ───────────────────────────────────────
+  const buyerWA = body.custom_field3
+    || txRow.customer_wa
+    || '';
+
+  const downloadLink       = process.env.APP_DOWNLOAD_LINK       || '#';
+  const downloadLinkMirror = process.env.APP_DOWNLOAD_LINK_MIRROR || '#';
+  const supportWA          = process.env.SUPPORT_WA               || '6281234567890';
+  const buyerName          = txRow.customer_name || 'Pelanggan';
+  const pkgLabel           = packageNames[packageType] || packageType;
+
+  // ── Kirim Email via Brevo ──────────────────────────────────
+  let emailSent = false;
+  try {
+    await sendBrevoEmail({
+      buyerName,
+      buyerEmail:   txRow.customer_email,
+      licenseKey,
+      pkgLabel,
+      orderId:      body.order_id,
+      downloadLink,
+      downloadLinkMirror,
+      supportWA,
+    });
+    emailSent = true;
+    console.log('[webhook] Email terkirim ke:', txRow.customer_email);
+  } catch (err) {
+    console.error('[webhook] Email gagal:', err.message);
+  }
+
+  // ── Kirim WhatsApp via Fonnte ──────────────────────────────
+  let waSent = false;
+  if (buyerWA) {
+    try {
+      await sendFonnteWA({
+        phone: buyerWA,
+        buyerName,
+        licenseKey,
+        pkgLabel,
+        orderId:      body.order_id,
+        downloadLink,
+        downloadLinkMirror,
+        supportWA,
+      });
+      waSent = true;
+      console.log('[webhook] WA terkirim ke:', buyerWA);
+    } catch (err) {
+      console.error('[webhook] WA gagal:', err.message);
+    }
+  }
+
+  // ── Update flag email_sent / wa_sent di tabel licenses ────
+  await supabase
+    .from('licenses')
+    .update({ email_sent: emailSent, wa_sent: waSent })
+    .eq('license_key', licenseKey);
+
+  // ── Update social_proof ────────────────────────────────────
+  await supabase.from('social_proof').insert({
+    customer_name: buyerName,
+    customer_city: txRow.customer_city || 'Indonesia',
+    paket:         pkgLabel,
+    order_id:      body.order_id,
+    verified:      true,
+  }).then(() => {}).catch(() => {});
+
+  console.log('[webhook] Selesai:', body.order_id, '| email:', emailSent, '| wa:', waSent);
+  return res.status(200).json({ success: true, license_key: licenseKey, email_sent: emailSent, wa_sent: waSent });
 };
 
-async function sendBrevoEmail(to_email, to_name, license_key, package_name) {
-  const downloadLink = process.env.APP_DOWNLOAD_LINK || '#';
-  const downloadMirror = process.env.APP_DOWNLOAD_LINK_MIRROR || '#';
-  const supportWA = process.env.SUPPORT_WA || '';
+// ============================================================
+// HELPER: Kirim email via Brevo (API v3)
+// ============================================================
+async function sendBrevoEmail({ buyerName, buyerEmail, licenseKey, pkgLabel, orderId, downloadLink, downloadLinkMirror, supportWA }) {
+  const html = `
+  <!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+  <body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:20px;">
+    <div style="max-width:560px;margin:0 auto;background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+      <div style="background:linear-gradient(135deg,#0B1D3A,#1E56AE);padding:28px 32px;text-align:center;">
+        <div style="color:white;font-size:1.4rem;font-weight:800;letter-spacing:-0.03em;">CertGen <span style="background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:6px;font-size:0.7rem;vertical-align:middle;">PRO</span></div>
+        <div style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-top:6px;">Lisensi Anda Sudah Siap 🎉</div>
+      </div>
+      <div style="padding:28px 32px;">
+        <p style="font-size:1rem;color:#1E293B;margin-bottom:0.5rem;">Halo, <strong>${buyerName}</strong>!</p>
+        <p style="font-size:0.9rem;color:#475569;line-height:1.7;">Terima kasih telah membeli <strong>CertGen PRO ${pkgLabel}</strong>. Berikut adalah License Key dan panduan aktivasi Anda.</p>
 
-  const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"></head>
-<body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f9f9f9; padding: 20px;">
-  <div style="background: #fff; border-radius: 12px; padding: 40px; border: 1px solid #e0e0e0;">
-    <h1 style="color: #1a1a2e; font-size: 24px; margin-bottom: 8px;">🎉 Pembayaran Berhasil!</h1>
-    <p style="color: #555; font-size: 16px;">Halo <strong>${to_name}</strong>, terima kasih telah membeli <strong>${package_name}</strong>.</p>
-    
-    <div style="background: #f0f4ff; border-radius: 8px; padding: 20px; margin: 24px 0; text-align: center;">
-      <p style="color: #555; margin: 0 0 8px; font-size: 14px;">Lisensi Anda:</p>
-      <p style="font-family: monospace; font-size: 24px; font-weight: bold; color: #2563eb; letter-spacing: 2px; margin: 0;">${license_key}</p>
-    </div>
-    
-    <p style="color: #555;">Salin kode di atas dan masukkan saat pertama kali membuka aplikasi CertGen Pro.</p>
-    
-    <div style="margin: 24px 0;">
-      <a href="${downloadLink}" style="display: inline-block; background: #2563eb; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-right: 12px;">⬇️ Download Aplikasi</a>
-      <a href="${downloadMirror}" style="display: inline-block; background: #475569; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">🔗 Link Mirror</a>
-    </div>
+        <div style="background:#EFF6FF;border:2px dashed #3B82F6;border-radius:10px;padding:20px;text-align:center;margin:20px 0;">
+          <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#1E56AE;margin-bottom:8px;">🔑 LICENSE KEY ANDA</div>
+          <div style="font-family:monospace;font-size:1.4rem;font-weight:800;color:#1A4080;letter-spacing:0.12em;">${licenseKey}</div>
+          <div style="font-size:0.75rem;color:#64748B;margin-top:8px;">Simpan key ini dengan aman. Jangan bagikan ke siapapun.</div>
+        </div>
 
-    <p style="color: #888; font-size: 14px; margin-top: 32px; border-top: 1px solid #eee; padding-top: 16px;">
-      Butuh bantuan? Hubungi support kami di WhatsApp: <strong>+${supportWA}</strong><br>
-      <em>Harap simpan email ini sebagai bukti pembelian Anda.</em>
-    </p>
-  </div>
-</body>
-</html>`;
+        <div style="background:#F8FAFC;border-radius:8px;padding:16px;margin-bottom:20px;">
+          <div style="font-size:0.8rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">📦 Detail Pesanan</div>
+          <table style="width:100%;font-size:0.85rem;color:#334155;">
+            <tr><td style="padding:4px 0;color:#64748B;">Order ID</td><td style="font-weight:600;">${orderId}</td></tr>
+            <tr><td style="padding:4px 0;color:#64748B;">Paket</td><td style="font-weight:600;">${pkgLabel}</td></tr>
+            <tr><td style="padding:4px 0;color:#64748B;">Status</td><td style="color:#10B981;font-weight:700;">✓ Aktif</td></tr>
+          </table>
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <div style="font-size:0.8rem;font-weight:700;color:#64748B;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;">📥 Download Aplikasi</div>
+          <a href="${downloadLink}" style="display:block;background:#1E56AE;color:white;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:700;font-size:0.9rem;text-align:center;margin-bottom:8px;">⬇️ Download CertGen PRO (Link Utama)</a>
+          <a href="${downloadLinkMirror}" style="display:block;background:#F1F5F9;color:#334155;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600;font-size:0.875rem;text-align:center;">🔗 Mirror Download</a>
+        </div>
+
+        <div style="background:#0B1D3A;border-radius:10px;padding:20px;color:white;margin-bottom:20px;">
+          <div style="font-size:0.85rem;font-weight:700;margin-bottom:12px;">📋 Cara Aktivasi</div>
+          <ol style="padding-left:18px;margin:0;font-size:0.85rem;color:rgba(255,255,255,0.85);line-height:2;">
+            <li>Download dan install CertGen PRO</li>
+            <li>Buka aplikasi → klik "Aktivasi Lisensi"</li>
+            <li>Masukkan License Key di atas</li>
+            <li>Klik "Aktifkan" — selesai! Aplikasi siap digunakan</li>
+          </ol>
+        </div>
+
+        <p style="font-size:0.875rem;color:#475569;">Butuh bantuan? Hubungi support kami di WhatsApp: <a href="https://wa.me/${supportWA}" style="color:#1E56AE;font-weight:700;">wa.me/${supportWA}</a></p>
+      </div>
+      <div style="background:#F8FAFC;padding:16px 32px;text-align:center;font-size:0.78rem;color:#94A3B8;border-top:1px solid #E2E8F0;">
+        © 2024 ImagineStudio · CertGen PRO · support@imaginestudio.id
+      </div>
+    </div>
+  </body></html>
+  `;
 
   await axios.post('https://api.brevo.com/v3/smtp/email', {
-    sender: { name: 'CertGen Pro', email: process.env.BREVO_SENDER_EMAIL },
-    to: [{ email: to_email, name: to_name }],
-    subject: `🔑 Lisensi CertGen Pro Anda — ${license_key}`,
-    htmlContent,
+    sender:     { name: 'CertGen PRO', email: process.env.BREVO_SENDER_EMAIL },
+    to:         [{ email: buyerEmail, name: buyerName }],
+    subject:    `🔑 License Key CertGen PRO Anda — ${pkgLabel}`,
+    htmlContent: html,
   }, {
     headers: {
-      'api-key': process.env.BREVO_API_KEY,
+      'api-key':      process.env.BREVO_API_KEY,
       'Content-Type': 'application/json',
     },
   });
 }
 
-async function sendFonnteWA(to_number, license_key, package_name) {
-  const downloadLink = process.env.APP_DOWNLOAD_LINK || '#';
-  const supportWA = process.env.SUPPORT_WA || '';
+// ============================================================
+// HELPER: Kirim WhatsApp via Fonnte
+// ============================================================
+async function sendFonnteWA({ phone, buyerName, licenseKey, pkgLabel, orderId, downloadLink, downloadLinkMirror, supportWA }) {
+  const message = `✅ *Pembayaran CertGen PRO Berhasil!*
 
-  const message = `✅ *Pembayaran CertGen Pro Berhasil!*
+Halo ${buyerName}! 🎉
 
-Terima kasih atas pembelian Anda.
+Terima kasih telah membeli *CertGen PRO ${pkgLabel}*.
 
-📦 *Paket:* ${package_name}
-🔑 *Lisensi Key:*
-\`${license_key}\`
+🔑 *License Key Anda:*
+\`${licenseKey}\`
+
+📦 *Order ID:* ${orderId}
 
 📥 *Download Aplikasi:*
-${downloadLink}
+Link Utama: ${downloadLink}
+Mirror: ${downloadLinkMirror}
 
-Cara aktivasi: buka aplikasi → masukkan lisensi key di atas.
+📋 *Cara Aktivasi:*
+1. Download & install CertGen PRO
+2. Buka app → klik "Aktivasi Lisensi"
+3. Masukkan License Key di atas
+4. Klik "Aktifkan" → siap pakai!
 
-Butuh bantuan? Chat admin: wa.me/${supportWA}
+💬 Butuh bantuan? Chat support kami:
+wa.me/${supportWA}
 
-_Harap simpan pesan ini sebagai bukti pembelian._`;
+_Simpan License Key ini dengan aman ya!_ 🔐
+
+— Tim CertGen PRO / ImagineStudio`;
 
   await axios.post('https://api.fonnte.com/send', {
-    target: to_number,
+    target:  phone,
     message,
+    delay:   1,
   }, {
-    headers: { Authorization: process.env.FONNTE_TOKEN },
+    headers: {
+      Authorization: process.env.FONNTE_TOKEN,
+      'Content-Type': 'application/json',
+    },
   });
 }
-
-module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
-  const payload = req.body;
-
-  // Verifikasi signature Midtrans
-  const serverKey = process.env.MIDTRANS_SERVER_KEY;
-  const signatureString = `${payload.order_id}${payload.status_code}${payload.gross_amount}${serverKey}`;
-  const expectedSignature = crypto.createHash('sha512').update(signatureString).digest('hex');
-
-  if (payload.signature_key !== expectedSignature) {
-    console.error('Invalid Midtrans signature');
-    return res.status(403).json({ error: 'Invalid signature' });
-  }
-
-  const { order_id, transaction_status, fraud_status } = payload;
-
-  // Hanya proses settlement (pembayaran berhasil)
-  const isSettled = transaction_status === 'settlement' ||
-    (transaction_status === 'capture' && fraud_status === 'accept');
-
-  if (!isSettled) {
-    // Update status pending/expire/cancel di DB
-    const statusMap = {
-      'pending': 'pending',
-      'deny': 'failed',
-      'cancel': 'failed',
-      'expire': 'expired',
-    };
-    const newStatus = statusMap[transaction_status] || transaction_status;
-    await supabase.from('transactions').update({ status: newStatus }).eq('order_id', order_id);
-    return res.status(200).json({ message: `Status updated to ${newStatus}` });
-  }
-
-  // Cek duplikat — jika sudah paid, skip
-  const { data: existingTx } = await supabase
-    .from('transactions')
-    .select('status')
-    .eq('order_id', order_id)
-    .single();
-
-  if (existingTx?.status === 'paid') {
-    return res.status(200).json({ message: 'Already processed' });
-  }
-
-  // Ambil data transaksi
-  const { data: transaction } = await supabase
-    .from('transactions')
-    .select('*')
-    .eq('order_id', order_id)
-    .single();
-
-  if (!transaction) {
-    return res.status(404).json({ error: 'Transaction not found' });
-  }
-
-  // Update status transaksi ke paid
-  await supabase.from('transactions').update({
-    status: 'paid',
-    payment_type: payload.payment_type || null,
-    paid_at: new Date().toISOString(),
-    raw_payload: payload,
-  }).eq('order_id', order_id);
-
-  // Generate lisensi
-  const appId = 'CERTGEN';
-  const secret = process.env.LICENSE_SECRET;
-  const { license_code } = generateLicenseInternal(appId, secret, transaction.paket, transaction.customer_email);
-  const package_name = PACKAGE_NAMES[transaction.paket] || transaction.paket;
-
-  let email_sent = false;
-  let wa_sent = false;
-
-  // Insert lisensi ke DB (expired_at = NULL, diisi saat aktivasi)
-  await supabase.from('licenses').insert([{
-    license_key: license_code,
-    order_id,
-    buyer_email: transaction.customer_email,
-    package_type: transaction.paket,
-    package_name,
-    app_id: appId,
-    status: 'active',
-    expired_at: null,
-  }]);
-
-  // Kirim Email via Brevo
-  try {
-    await sendBrevoEmail(transaction.customer_email, transaction.customer_name, license_code, package_name);
-    email_sent = true;
-  } catch (err) {
-    console.error('Brevo error:', err.message);
-  }
-
-  // Kirim WA via Fonnte
-  try {
-    if (transaction.customer_wa) {
-      await sendFonnteWA(transaction.customer_wa, license_code, package_name);
-      wa_sent = true;
-    }
-  } catch (err) {
-    console.error('Fonnte error:', err.message);
-  }
-
-  // Update flag pengiriman
-  await supabase.from('licenses')
-    .update({ email_sent, wa_sent })
-    .eq('license_key', license_code);
-
-  return res.status(200).json({
-    message: 'License generated and sent',
-    license_key: license_code,
-    email_sent,
-    wa_sent,
-  });
-};

@@ -1,11 +1,17 @@
 {
   "name": "certgenpro",
   "version": "3.0.0",
-  "description": "CertGen Pro — Full Automation License Sales System (Monorepo Edition)",
+  "description": "CertGen PRO — Automated License Sales System (Monorepo v3)",
   "type": "commonjs",
+  "engines": {
+    "node": ">=18.x"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
     "axios": "^1.7.0",
     "midtrans-client": "^1.4.0"
+  },
+  "scripts": {
+    "dev": "vercel dev"
   }
 }

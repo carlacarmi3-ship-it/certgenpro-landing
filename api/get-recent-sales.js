@@ -1,63 +1,58 @@
-// api/get-recent-sales.js — CertGen Pro v3
-// Social proof: tampilkan pembelian terbaru (nama samar + paket)
+// api/get-recent-sales.js
+// Mengembalikan data penjualan terbaru untuk social proof di landing page
+
 const { createClient } = require('@supabase/supabase-js');
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
-const PACKAGE_DISPLAY = {
-  daily:    'Paket Harian',
-  monthly:  'Paket Bulanan',
-  yearly:   'Paket Tahunan',
-  lifetime: 'Paket Lifetime',
-};
-
-function obscureName(name) {
-  if (!name) return 'Seseorang';
-  const parts = name.trim().split(' ');
-  const first = parts[0];
-  if (first.length <= 2) return first + '**';
-  return first.slice(0, 2) + '*'.repeat(Math.min(first.length - 2, 4));
-}
-
-function timeAgo(dateStr) {
-  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (diff < 60) return `${diff} detik lalu`;
-  if (diff < 3600) return `${Math.floor(diff / 60)} menit lalu`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} jam lalu`;
-  return `${Math.floor(diff / 86400)} hari lalu`;
-}
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
+  // Cache 60 detik di Vercel Edge
+  res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  try {
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('customer_name, customer_city, paket, paid_at')
-      .eq('status', 'paid')
-      .order('paid_at', { ascending: false })
-      .limit(10);
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
 
-    if (error) throw error;
+  const { data, error } = await supabase
+    .from('social_proof')
+    .select('customer_name, customer_city, paket, created_at, verified')
+    .eq('verified', true)
+    .order('created_at', { ascending: false })
+    .limit(20);
 
-    const sales = (data || []).map(tx => ({
-      name: obscureName(tx.customer_name),
-      city: tx.customer_city || 'Indonesia',
-      package: PACKAGE_DISPLAY[tx.paket] || tx.paket,
-      time_ago: timeAgo(tx.paid_at),
-    }));
-
-    return res.status(200).json(sales);
-  } catch (err) {
-    console.error('get-recent-sales error:', err.message);
-    return res.status(500).json({ error: err.message });
+  if (error || !data) {
+    return res.status(200).json([]);
   }
+
+  // Format time_ago
+  const result = data.map(row => {
+    const diffMs  = Date.now() - new Date(row.created_at).getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHr  = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHr / 24);
+
+    let time_ago;
+    if (diffMin < 2)       time_ago = 'baru saja';
+    else if (diffMin < 60) time_ago = `${diffMin} menit lalu`;
+    else if (diffHr < 24)  time_ago = `${diffHr} jam lalu`;
+    else                   time_ago = `${diffDay} hari lalu`;
+
+    // Sensor nama: "Ahmad Fauzi" → "Ahmad F***"
+    const nameParts = row.customer_name.split(' ');
+    const maskedName = nameParts.length > 1
+      ? `${nameParts[0]} ${nameParts[1][0]}***`
+      : `${row.customer_name[0]}***`;
+
+    return {
+      customer_name: maskedName,
+      customer_city: row.customer_city,
+      paket:         row.paket,
+      time_ago,
+    };
+  });
+
+  return res.status(200).json(result);
 };

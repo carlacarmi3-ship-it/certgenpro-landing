@@ -1,39 +1,77 @@
-// api/create-payment.js — CertGen Pro v3
+// api/create-payment.js
+// Membuat Midtrans Snap token dan menyimpan transaksi ke Supabase
+
 const { createClient } = require('@supabase/supabase-js');
-const midtransClient = require('midtrans-client');
+const midtransClient    = require('midtrans-client');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
-// Daftar harga server-side — TIDAK BISA dimanipulasi dari client
-const PRICELIST = {
-  daily:    { name: 'CertGen Pro — Harian',    price: 15000  },
-  monthly:  { name: 'CertGen Pro — Bulanan',   price: 79000  },
-  yearly:   { name: 'CertGen Pro — Tahunan',   price: 499000 },
-  lifetime: { name: 'CertGen Pro — Selamanya', price: 999000 },
+// ============================================================
+// PRICE LIST — server-side validation (jangan percaya client)
+// ============================================================
+const PRICE_LIST = {
+  daily:    { amount: 19000,  label: 'Paket Harian'   },
+  monthly:  { amount: 49000,  label: 'Paket Bulanan'  },
+  yearly:   { amount: 149000, label: 'Paket Tahunan'  },
+  lifetime: { amount: 299000, label: 'Paket Lifetime' },
 };
 
 module.exports = async function handler(req, res) {
+  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { name, email, whatsapp, city, package_type } = req.body;
+  const {
+    package_type,
+    customer_name,
+    customer_email,
+    customer_wa,
+    customer_city,
+    renew_license_key = null,
+  } = req.body;
 
-  if (!name || !email || !whatsapp || !package_type) {
-    return res.status(400).json({ error: 'name, email, whatsapp, dan package_type wajib diisi' });
+  // ── Validasi input ─────────────────────────────────────────
+  if (!package_type || !PRICE_LIST[package_type]) {
+    return res.status(400).json({ error: 'Paket tidak valid.' });
+  }
+  if (!customer_name || !customer_email || !customer_wa) {
+    return res.status(400).json({ error: 'Data pembeli tidak lengkap.' });
   }
 
-  const paket = PRICELIST[package_type];
-  if (!paket) {
-    return res.status(400).json({ error: 'package_type tidak valid' });
+  const pkg    = PRICE_LIST[package_type];
+  const amount = pkg.amount;
+
+  // ── Supabase client ────────────────────────────────────────
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  // ── Generate order_id unik ─────────────────────────────────
+  const ts      = Date.now();
+  const rand    = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const orderId = `CGP-${ts}-${rand}`;
+
+  // ── Simpan transaksi ke Supabase ───────────────────────────
+  const { error: dbError } = await supabase.from('transactions').insert({
+    order_id:       orderId,
+    customer_name:  customer_name.trim(),
+    customer_email: customer_email.trim().toLowerCase(),
+    customer_wa:    customer_wa.trim().replace(/^0/, '62'),
+    customer_city:  customer_city ? customer_city.trim() : '',
+    paket:          pkg.label,
+    amount,
+    status:         'pending',
+    raw_payload:    { package_type, renew_license_key },
+  });
+
+  if (dbError) {
+    console.error('[create-payment] DB error:', dbError);
+    return res.status(500).json({ error: 'Gagal menyimpan transaksi.' });
   }
 
+  // ── Buat Midtrans Snap token ───────────────────────────────
   const isProduction = process.env.MIDTRANS_IS_PRODUCTION === 'true';
 
   const snap = new midtransClient.Snap({
@@ -42,56 +80,49 @@ module.exports = async function handler(req, res) {
     clientKey: process.env.MIDTRANS_CLIENT_KEY,
   });
 
-  // Generate order_id unik
-  const timestamp = Date.now();
-  const order_id = `CGP-${package_type.toUpperCase().slice(0,3)}-${timestamp}`;
+  const baseUrl = process.env.APP_BASE_URL || 'https://certgenpro.vercel.app';
 
   const parameter = {
     transaction_details: {
-      order_id,
-      gross_amount: paket.price,
+      order_id: orderId,
+      gross_amount: amount,
     },
-    item_details: [{
-      id: package_type,
-      price: paket.price,
-      quantity: 1,
-      name: paket.name,
-    }],
     customer_details: {
-      first_name: name,
-      email,
-      phone: whatsapp,
+      first_name:   customer_name.trim(),
+      email:        customer_email.trim().toLowerCase(),
+      phone:        customer_wa.trim(),
     },
+    item_details: [
+      {
+        id:       package_type,
+        price:    amount,
+        quantity: 1,
+        name:     pkg.label,
+        brand:    'CertGen PRO',
+        category: 'Software License',
+      },
+    ],
     callbacks: {
-      finish: `${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : ''}/thank-you.html`,
-      error: `${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : ''}/payment-status.html`,
-      pending: `${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : ''}/payment-status.html`,
+      finish:  `${baseUrl}/thank-you.html?order_id=${orderId}`,
+      error:   `${baseUrl}/payment-status.html?order_id=${orderId}&status=error`,
+      pending: `${baseUrl}/payment-status.html?order_id=${orderId}&status=pending`,
     },
-    notification_url: `${process.env.APP_BASE_URL || (process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : '')}/api/midtrans-webhook`,
+    // Midtrans notification URL (backup — utamanya set di dashboard Midtrans)
+    notification_url: `${baseUrl}/api/midtrans-webhook`,
+    // Custom field untuk keperluan webhook
+    custom_field1: package_type,
+    custom_field2: renew_license_key || '',
+    custom_field3: customer_wa.trim().replace(/^0/, '62'),
   };
 
   try {
     const transaction = await snap.createTransaction(parameter);
-
-    // Simpan transaksi ke Supabase dengan status pending
-    await supabase.from('transactions').insert([{
-      order_id,
-      customer_name: name,
-      customer_email: email,
-      customer_wa: whatsapp,
-      customer_city: city || null,
-      paket: package_type,
-      amount: paket.price,
-      status: 'pending',
-    }]);
-
     return res.status(200).json({
-      token: transaction.token,
-      redirect_url: transaction.redirect_url,
-      order_id,
+      snap_token: transaction.token,
+      order_id:   orderId,
     });
   } catch (err) {
-    console.error('Midtrans error:', err);
-    return res.status(500).json({ error: err.message || 'Gagal membuat transaksi' });
+    console.error('[create-payment] Midtrans error:', err);
+    return res.status(500).json({ error: 'Gagal membuat sesi pembayaran Midtrans.' });
   }
 };
